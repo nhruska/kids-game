@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar System with Year Counter and Speed Control</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: black;
+        }
+
+        #solar-system {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .orbit {
+            position: absolute;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+        }
+
+        .planet {
+            position: absolute;
+            border-radius: 50%;
+            background-color: white;
+        }
+
+        #sun {
+            background: radial-gradient(circle, yellow, orange, red);
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            z-index: 1;
+            box-shadow: 0 0 30px yellow;
+        }
+
+        /* Planet orbits */
+        #mercury-orbit { width: 230px; height: 230px; animation: mercuryOrbit calc(4.15s / var(--speed-factor, 1)) linear infinite; }
+        #venus-orbit { width: 330px; height: 330px; animation: venusOrbit calc(6.2s / var(--speed-factor, 1)) linear infinite; }
+        #earth-orbit { width: 430px; height: 430px; animation: earthOrbit calc(10s / var(--speed-factor, 1)) linear infinite; }
+        #mars-orbit { width: 530px; height: 530px; animation: marsOrbit calc(18.8s / var(--speed-factor, 1)) linear infinite; }
+        #jupiter-orbit { width: 650px; height: 650px; animation: jupiterOrbit calc(118.6s / var(--speed-factor, 1)) linear infinite; }
+        #saturn-orbit { width: 750px; height: 750px; animation: saturnOrbit calc(294.6s / var(--speed-factor, 1)) linear infinite; }
+        #uranus-orbit { width: 850px; height: 850px; animation: uranusOrbit calc(840.1s / var(--speed-factor, 1)) linear infinite; }
+        #neptune-orbit { width: 950px; height: 950px; animation: neptuneOrbit calc(1648s / var(--speed-factor, 1)) linear infinite; }
+
+        /* Planet sizes and colors */
+        #mercury {
+            width: 3.5px; /* Scaled down */
+            height: 3.5px;
+            background: radial-gradient(circle, #b1b1b1, #4b4b4b);
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        #venus {
+            width: 8px; /* Scaled down */
+            height: 8px;
+            background: radial-gradient(circle, #e0b27b, #b57b38);
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        #earth {
+            width: 9px; /* Scaled down */
+            height: 9px;
+            background: radial-gradient(circle, #1e90ff, #006994, #4CAF50);
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        #mars {
+            width: 5px; /* Scaled down */
+            height: 5px;
+            background: radial-gradient(circle, #e07b55, #c1440e);
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        #jupiter {
+            width: 50px; /* Scaled down, Max size */
+            height: 50px;
+            background: linear-gradient(to bottom, #e2a76f, #d19c70, #b5844e);
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        #saturn {
+            width: 42px; /* Scaled down */
+            height: 42px;
+            background: linear-gradient(to bottom, #f7c87a, #e1ae6b, #d79a57);
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            position: relative;
+        }
+
+        #saturn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 60px; /* Adjust width of rings */
+            height: 10px; /* Adjust height of rings */
+            background: rgba(200, 200, 200, 0.5);
+            border-radius: 50%;
+            transform: translate(-50%, -50%) rotate(20deg); /* Tilt the rings */
+            box-shadow: 0 0 5px rgba(200, 200, 200, 0.8);
+        }
+
+        #uranus {
+            width: 18px; /* Scaled down */
+            height: 18px;
+            background: radial-gradient(circle, #a6e7ff, #3bb1db);
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        #neptune {
+            width: 17px; /* Scaled down */
+            height: 17px;
+            background: radial-gradient(circle, #2459ff, #0000ff);
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* Animations for orbiting */
+        @keyframes mercuryOrbit {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes venusOrbit {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes earthOrbit {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes marsOrbit {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes jupiterOrbit {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes saturnOrbit {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes uranusOrbit {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes neptuneOrbit {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Counter and Slider */
+        #year-counter {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 24px;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        #speed-slider {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+        }
+    </style>
+</head>
+<body>
+    <div id="solar-system">
+        <div id="sun"></div>
+
+        <!-- Orbits for planets -->
+        <div id="mercury-orbit" class="orbit">
+            <div id="mercury" class="planet"></div>
+        </div>
+
+        <div id="venus-orbit" class="orbit">
+            <div id="venus" class="planet"></div>
+        </div>
+
+        <div id="earth-orbit" class="orbit">
+            <div id="earth" class="planet"></div>
+        </div>
+
+        <div id="mars-orbit" class="orbit">
+            <div id="mars" class="planet"></div>
+        </div>
+
+        <div id="jupiter-orbit" class="orbit">
+            <div id="jupiter" class="planet"></div>
+        </div>
+
+        <div id="saturn-orbit" class="orbit">
+            <div id="saturn" class="planet"></div>
+        </div>
+
+        <div id="uranus-orbit" class="orbit">
+            <div id="uranus" class="planet"></div>
+        </div>
+
+        <div id="neptune-orbit" class="orbit">
+            <div id="neptune" class="planet"></div>
+        </div>
+    </div>
+
+    <!-- Year Counter -->
+    <div id="year-counter">Year: 0</div>
+
+    <!-- Speed Slider -->
+    <input type="range" id="speed-slider" min="0.1" max="5" value="1" step="0.1">
+
+    <script>
+        const yearCounter = document.getElementById('year-counter');
+        const speedSlider = document.getElementById('speed-slider');
+        let earthOrbitDuration = 10; // Earth orbits in 10 seconds by default
+        let yearsPassed = 0;
+
+        // Update the year counter as Earth completes its orbit
+        function updateYearCounter() {
+            yearsPassed++;
+            yearCounter.textContent = `Year: ${yearsPassed}`;
+        }
+
+        // Set interval for Earth's orbit and update based on speed slider
+        let orbitInterval = setInterval(updateYearCounter, earthOrbitDuration * 1000);
+
+        // Update the speed of time based on the slider value
+        speedSlider.addEventListener('input', () => {
+            const speedFactor = speedSlider.value;
+            document.documentElement.style.setProperty('--speed-factor', `${speedFactor}`);
+            clearInterval(orbitInterval); // Clear the existing interval
+            orbitInterval = setInterval(updateYearCounter, (earthOrbitDuration * 1000) / speedFactor); // Update the interval based on new speed
+        });
+    </script>
+</body>
+</html>
