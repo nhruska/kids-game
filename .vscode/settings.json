@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "undefined/subscriptions/eea77939-e703-4f91-bb7d-6064790e66c9/resourceGroups/appsvc_windows_centralus/providers/Microsoft.Web/sites/kids-game",
+    "appService.deploySubpath": "."
+}
