@@ -1,176 +1,256 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Science Explorer: Planet Rescue</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Mini Games Hub 🎮</title>
     <style>
-        #bins {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 20px;
+        :root {
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.5);
+            --success: #4ade80;
+            --success-glow: rgba(74, 222, 128, 0.5);
+            --error: #ef4444;
+            --error-glow: rgba(239, 68, 68, 0.5);
+            --warn: #fbbf24;
+            --warn-glow: rgba(251, 191, 36, 0.5);
+            --gold: #ffd700;
         }
 
-        .bin {
-            width: 150px;
-            height: 200px;
-            border: 2px solid #ff9800;
+        body {
+            margin: 0;
+            min-height: 100vh;
             display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
+            justify-content: center;
             align-items: center;
-            border-radius: 15px;
-            background: #f0f0f0;
-            font-size: 1.1em;
-            padding: 10px;
-            box-sizing: border-box;
-            transition: transform 0.3s;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            font-family: system-ui, sans-serif;
+            color: white;
+            padding: 2rem;
+        }
+
+        .hub-container {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        h1 {
+            margin: 0 0 2rem;
+            background: linear-gradient(135deg, var(--primary), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 10px var(--primary-glow));
+            font-size: 2.5rem;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            text-decoration: none;
+            color: white;
+            position: relative;
             overflow: hidden;
         }
 
-        .bin .trash-item {
-            margin-top: 5px;
-            background-color: #ffffff;
-            padding: 5px;
-            border-radius: 10px;
+        .game-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
         }
 
-        .bin:hover {
-            transform: scale(1.1);
-            background: #ffe0b2;
+        .game-card:hover .game-icon {
+            transform: rotate(15deg) scale(1.2);
+        }
+
+        .game-card:active {
+            transform: scale(0.98);
+        }
+
+        .game-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .game-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--warn));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .game-description {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            line-height: 1.4;
+        }
+
+        .difficulty {
+            display: flex;
+            justify-content: center;
+            gap: 0.25rem;
+            margin-top: 1rem;
+        }
+
+        .difficulty-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary);
+            opacity: 0.3;
+        }
+
+        .difficulty-dot.active {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .hub-container {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+        }
+
+        /* Particle effect on hover */
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.8);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: -1;
+        }
+
+        .game-card:hover::before {
+            opacity: 0.2;
+            transform: translate(-50%, -50%) scale(1.5);
         }
     </style>
 </head>
 <body>
-    <div id="game-container">
-        <div id="splash-screen">
-            <h1>Science Explorer: Planet Rescue</h1>
-            <button id="start-game-button">Start Game</button>
-        </div>
-        <div id="mini-game-1" class="mini-game" style="display: none;">
-            <h2>Swipe Away Pollution</h2>
-            <p>Pollution Level: <span id="pollution-level">100%</span></p>
-            <div id="swipe-area" ontouchstart="handleSwipe(event)" ontouchend="handleSwipeEnd(event)">Swipe left or right to clean up!</div>
-        </div>
-        <div id="mini-game-2" class="mini-game" style="display: none;">
-            <h2>Forest Restoration</h2>
-            <p>Forest Health: <span id="forest-health">80%</span></p>
-            <button id="plant-tree-button">Plant Tree</button>
-            <button id="place-shelter-button">Place Shelter</button>
-        </div>
-        <div id="mini-game-3" class="mini-game" style="display: none;">
-            <h2>Trash Sorting</h2>
-            <div id="trash-items">
-                <div class="trash-item" draggable="true" data-type="recycling" id="plastic-bottle">Plastic Bottle</div>
-                <div class="trash-item" draggable="true" data-type="trash" id="banana-peel">Banana Peel</div>
-                <div class="trash-item" draggable="true" data-type="recycling" id="paper">Paper</div>
-            </div>
-            <div id="bins">
-                <div id="recycling-bin" class="bin" data-type="recycling">Recycling Bin</div>
-                <div id="trash-bin" class="bin" data-type="trash">Trash Bin</div>
-            </div>
-        </div>
-        <div id="success-screen" style="display: none;">
-            <h2>Success!</h2>
-            <p>Congratulations! You completed this mini-game.</p>
-            <button id="next-game-button">Next Challenge</button>
+    <div class="hub-container">
+        <h1>Mini Games Hub 🎮</h1>
+        <div class="games-grid">
+            <a href="/color_match" class="game-card">
+                <div class="game-icon">🎨</div>
+                <div class="game-title">Color Match</div>
+                <div class="game-description">Test your color matching skills in this fast-paced challenge!</div>
+                <div class="difficulty">
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot"></div>
+                </div>
+            </a>
+
+            <a href="/math_wiz" class="game-card">
+                <div class="game-icon">🔢</div>
+                <div class="game-title">Math Wiz</div>
+                <div class="game-description">Solve quick math problems and become a mathematics master!</div>
+                <div class="difficulty">
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot active"></div>
+                </div>
+            </a>
+
+            <a href="/shape_swipe" class="game-card">
+                <div class="game-icon">⭐</div>
+                <div class="game-title">Shape Swipe</div>
+                <div class="game-description">Swipe and match shapes in this addictive puzzle game!</div>
+                <div class="difficulty">
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot"></div>
+                </div>
+            </a>
+
+            <a href="/word_scramble" class="game-card">
+                <div class="game-icon">📝</div>
+                <div class="game-title">Word Scramble</div>
+                <div class="game-description">Unscramble letters to find hidden words!</div>
+                <div class="difficulty">
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot active"></div>
+                </div>
+            </a>
+
+            <a href="/space_hangman" class="game-card">
+                <div class="game-icon">🎯</div>
+                <div class="game-title">Hangman</div>
+                <div class="game-description">Guess the word one letter at a time. Can you save the day?</div>
+                <div class="difficulty">
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot"></div>
+                </div>
+            </a>
+
+            <a href="/pattern_master" class="game-card">
+                <div class="game-icon">🎵</div>
+                <div class="game-title">Pattern Master</div>
+                <div class="game-description">Remember and repeat the pattern to test your memory!</div>
+                <div class="difficulty">
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot active"></div>
+                </div>
+            </a>
+            <a href="/speed_click/" class="game-card">
+                <div class="game-icon">🕒</div>
+                <div class="game-title">Speed Click</div>
+                <div class="game-description">Click as fast as you can in 30 seconds!</div>
+                <div class="difficulty">
+                    <div class="difficulty">
+                        <div class="difficulty-dot active"></div>
+                        <div class="difficulty-dot active"></div>
+                        <div class="difficulty-dot active"></div>
+                    </div>
+                </div>
+            </a>
+            <a href="/word_chain/" class="game-card">
+                <div class="game-icon">🔗</div>
+                <div class="game-title">Word Chain</div>
+                <div class="game-description">Chain words together to practice spelling!</div>
+                <div class="difficulty">
+                    <div class="difficulty">
+                        <div class="difficulty-dot active"></div>
+                        <div class="difficulty-dot active"></div>
+                        <div class="difficulty-dot active"></div>
+                    </div>
+                </div>
+            </a>
         </div>
     </div>
-    <script src="game.js"></script>
-    <script>
-        let startX;
-
-        function handleSwipe(event) {
-            startX = event.touches[0].clientX;
-        }
-
-        function handleSwipeEnd(event) {
-            let endX = event.changedTouches[0].clientX;
-            let difference = endX - startX;
-            if (Math.abs(difference) > 50) { // Swipe detected
-                let swipeEvent = new Event('swipe');
-                document.getElementById('swipe-area').dispatchEvent(swipeEvent);
-            }
-        }
-
-        document.querySelectorAll('.trash-item').forEach(item => {
-            item.addEventListener('touchstart', dragStartTouch);
-        });
-
-        document.querySelectorAll('.bin').forEach(bin => {
-            bin.addEventListener('dragover', dragOver);
-            bin.addEventListener('drop', drop);
-            bin.addEventListener('touchmove', dragOverTouch);
-            bin.addEventListener('touchend', dropTouch);
-        });
-
-        function dragStart(event) {
-            event.dataTransfer.setData('text', event.target.id);
-        }
-
-        function dragStartTouch(event) {
-            event.dataTransfer = {
-                setData: function(key, value) {
-                    this[key] = value;
-                },
-                getData: function(key) {
-                    return this[key];
-                }
-            };
-            event.dataTransfer.setData('text', event.target.id);
-        }
-
-        function dragOver(event) {
-            event.preventDefault();
-        }
-
-        function dragOverTouch(event) {
-            event.preventDefault();
-        }
-
-        function drop(event) {
-            event.preventDefault();
-            const itemId = event.dataTransfer.getData('text');
-            const itemType = document.getElementById(itemId).dataset.type;
-            const binType = event.target.dataset.type;
-
-            if (itemType === binType) {
-                const item = document.getElementById(itemId);
-                event.target.appendChild(item);
-                item.setAttribute('draggable', 'false');
-                item.classList.add('sorted-item');
-                checkAllSorted();
-            } else {
-                alert('Incorrect bin! Try again.');
-            }
-        }
-
-        function dropTouch(event) {
-            event.preventDefault();
-            const touch = event.changedTouches[0];
-            const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
-            const itemId = event.target.id;
-            const itemType = document.getElementById(itemId).dataset.type;
-            const binType = targetElement.dataset.type;
-
-            if (itemType === binType) {
-                const item = document.getElementById(itemId);
-                targetElement.appendChild(item);
-                item.setAttribute('draggable', 'false');
-                item.classList.add('sorted-item');
-                checkAllSorted();
-            } else {
-                alert('Incorrect bin! Try again.');
-            }
-        }
-
-        function checkAllSorted() {
-            const remainingItems = document.querySelectorAll('.trash-item[draggable="true"]');
-            if (remainingItems.length === 0) {
-                completeMiniGame(2);
-            }
-        }
-    </script>
 </body>
 </html>

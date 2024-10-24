@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Speed Click 🎯</title>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.5);
+            --success: #4ade80;
+            --success-glow: rgba(74, 222, 128, 0.5);
+            --error: #ef4444;
+            --error-glow: rgba(239, 68, 68, 0.5);
+            --warn: #fbbf24;
+            --warn-glow: rgba(251, 191, 36, 0.5);
+            --gold: #ffd700;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            font-family: system-ui, sans-serif;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            position: relative;
+        }
+
+        h1 {
+            margin: 0 0 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 10px var(--primary-glow));
+        }
+
+        .score {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-shadow: 0 0 10px var(--primary-glow);
+            margin-bottom: 1rem;
+        }
+
+        .timer {
+            font-size: 1.2rem;
+            color: var(--warn);
+            margin-bottom: 1rem;
+        }
+
+        .play-area {
+            width: 400px;
+            height: 300px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            position: relative;
+            overflow: hidden;
+            cursor: crosshair;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .target {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--primary), var(--primary-glow));
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .target:hover {
+            transform: scale(1.1);
+        }
+
+        .target.bonus {
+            background: radial-gradient(circle, var(--gold), var(--warn-glow));
+            animation: pulse 1s infinite;
+        }
+
+        .target.danger {
+            background: radial-gradient(circle, var(--error), var(--error-glow));
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-glow));
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+                        opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-top: 1rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .popup-text {
+            position: absolute;
+            pointer-events: none;
+            font-weight: bold;
+            animation: floatUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            z-index: 10;
+        }
+
+        .popup-text.bonus {
+            color: var(--gold);
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-30px); opacity: 0; }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .shake {
+            animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Speed Click 🎯</h1>
+        <div class="score">Score: <span id="score">0</span></div>
+        <div class="timer">Time: <span id="time">30</span>s</div>
+        <div class="play-area" id="playArea">
+            <!-- Targets will be spawned here -->
+        </div>
+        <button class="btn" id="startBtn">Start Game</button>
+    </div>
+
+    <script>
+        const playArea = document.getElementById('playArea');
+        const startBtn = document.getElementById('startBtn');
+        const scoreElement = document.getElementById('score');
+        const timeElement = document.getElementById('time');
+        
+        let score = 0;
+        let timeLeft = 30;
+        let gameInterval;
+        let spawnInterval;
+        let isPlaying = false;
+
+        const cleanupGame = () => {
+            clearInterval(gameInterval);
+            clearInterval(spawnInterval);
+            isPlaying = false;
+            startBtn.disabled = false;
+            startBtn.textContent = 'Play Again';
+            // Remove any remaining targets
+            while (playArea.firstChild) {
+                playArea.firstChild.remove();
+            }
+        };
+
+        const createTarget = () => {
+            if (!isPlaying) return;
+            
+            const target = document.createElement('div');
+            target.className = 'target';
+            
+            // Random position within play area
+            const maxX = playArea.clientWidth - 40;
+            const maxY = playArea.clientHeight - 40;
+            target.style.left = Math.random() * maxX + 'px';
+            target.style.top = Math.random() * maxY + 'px';
+            
+            // 10% chance of bonus target, 15% chance of danger target
+            const rand = Math.random();
+            if (rand < 0.1) {
+                target.classList.add('bonus');
+            } else if (rand < 0.25) {
+                target.classList.add('danger');
+            }
+            
+            target.addEventListener('click', () => {
+                if (target.classList.contains('danger')) {
+                    // Penalty for clicking danger target
+                    score = Math.max(0, score - 5);
+                    playArea.classList.add('shake');
+                    createOscillator(100, 0.3);
+                    setTimeout(() => playArea.classList.remove('shake'), 500);
+                    createPopup(target, '-5!', true);
+                } else {
+                    // Points for normal/bonus targets
+                    const points = target.classList.contains('bonus') ? 5 : 1;
+                    score += points;
+                    createPopup(target, `+${points}!`, target.classList.contains('bonus'));
+                    createOscillator(440 + score * 10, 0.2);
+                }
+                scoreElement.textContent = score;
+                target.remove();
+            });
+            
+            playArea.appendChild(target);
+            
+            // Remove target after 2 seconds if not clicked
+            setTimeout(() => {
+                if (target.parentNode === playArea) {
+                    target.remove();
+                }
+            }, 2000);
+        };
+
+        const createPopup = (target, text, isBonus) => {
+            const popup = document.createElement('div');
+            popup.className = `popup-text ${isBonus ? 'bonus' : ''}`;
+            const rect = target.getBoundingClientRect();
+            const playAreaRect = playArea.getBoundingClientRect();
+            popup.style.left = (rect.left - playAreaRect.left) + 'px';
+            popup.style.top = (rect.top - playAreaRect.top) + 'px';
+            popup.textContent = text;
+            playArea.appendChild(popup);
+            setTimeout(() => popup.remove(), 500);
+        };
+
+        const createOscillator = (frequency, duration) => {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.value = frequency;
+                
+                gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+                
+                oscillator.start();
+                setTimeout(() => {
+                    oscillator.stop();
+                    audioCtx.close();
+                }, duration * 1000);
+            } catch (e) {
+                console.log('Audio not supported');
+            }
+        };
+
+        startBtn.addEventListener('click', () => {
+            score = 0;
+            timeLeft = 30;
+            scoreElement.textContent = score;
+            timeElement.textContent = timeLeft;
+            startBtn.disabled = true;
+            isPlaying = true;
+            
+            // Spawn targets every 0.8 seconds
+            spawnInterval = setInterval(createTarget, 800);
+            
+            // Update timer
+            gameInterval = setInterval(() => {
+                timeLeft--;
+                timeElement.textContent = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    cleanupGame();
+                }
+            }, 1000);
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', cleanupGame);
+    </script>
+</body>
+</html>

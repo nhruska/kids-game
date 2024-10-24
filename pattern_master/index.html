@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+<!-- Previous head/style section remains exactly the same -->
+<head>
+    <!-- All previous styles remain identical -->
+    <title>Number Patterns 🔢</title>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.5);
+            --success: #4ade80;
+            --success-glow: rgba(74, 222, 128, 0.5);
+            --error: #ef4444;
+            --error-glow: rgba(239, 68, 68, 0.5);
+            --warn: #fbbf24;
+            --warn-glow: rgba(251, 191, 36, 0.5);
+            --gold: #ffd700;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            font-family: system-ui, sans-serif;
+            color: white;
+            padding: 1rem;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            margin: 0 0 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 10px var(--primary-glow));
+        }
+
+        .score {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-shadow: 0 0 10px var(--primary-glow);
+            margin-bottom: 1rem;
+        }
+
+        .pattern-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin: 2rem auto;
+            flex-wrap: wrap;
+        }
+
+        .number-box {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: bold;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .number-box.filled {
+            background: var(--primary-glow);
+            border-color: var(--primary);
+        }
+
+        .number-box input {
+            width: 100%;
+            height: 100%;
+            background: none;
+            border: none;
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            font-family: inherit;
+        }
+
+        .number-box input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+        }
+
+        .number-box.success {
+            background: var(--success-glow);
+            border-color: var(--success);
+            animation: pulse 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .number-box.error {
+            animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+
+        .pattern-type {
+            font-size: 1.5rem;
+            color: var(--warn);
+            margin: 1rem 0;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-glow));
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 1rem;
+            color: white;
+            font-size: 1.25rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            margin: 0.5rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .hint {
+            color: var(--warn);
+            font-size: 1.5rem;
+            margin: 1rem 0;
+            min-height: 1.5rem;
+        }
+
+        .arrow {
+            color: var(--primary);
+            font-size: 2rem;
+            margin: 0 0.5rem;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        .popup-text {
+            position: fixed;
+            pointer-events: none;
+            font-weight: bold;
+            font-size: 2.5rem;
+            animation: floatUp 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            z-index: 100;
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-50px); opacity: 0; }
+        }
+        
+        .streak {
+            font-size: 1.2rem;
+            color: var(--gold);
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Number Patterns 🔢</h1>
+        <div class="score">Score: <span id="score">0</span> ⭐</div>
+        <div class="streak">Streak: <span id="streak">0</span> 🔥</div>
+        <div class="pattern-type" id="patternType">Counting by...</div>
+        <div class="hint" id="hint">What number comes next?</div>
+        <div id="patternContainer" class="pattern-container">
+            <!-- Pattern will be generated here -->
+        </div>
+        <button class="btn" id="checkBtn">Check Answer ✨</button>
+        <button class="btn" id="newBtn">New Pattern 🎲</button>
+    </div>
+
+    <script>
+        const patternContainer = document.getElementById('patternContainer');
+        const checkBtn = document.getElementById('checkBtn');
+        const newBtn = document.getElementById('newBtn');
+        const scoreElement = document.getElementById('score');
+        const streakElement = document.getElementById('streak');
+        const hintElement = document.getElementById('hint');
+        const patternTypeElement = document.getElementById('patternType');
+
+        let score = 0;
+        let streak = 0;
+        let currentPattern = [];
+        let currentStep = 0;
+
+        const patterns = [
+            { step: 2, name: "2s", max: 20, startRange: [2, 8] },
+            { step: 5, name: "5s", max: 50, startRange: [5, 20] },
+            { step: 10, name: "10s", max: 100, startRange: [10, 40] }
+        ];
+
+        // Previous audio functions remain the same
+        const createOscillator = (frequency, duration) => {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.value = frequency;
+                
+                gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+                
+                oscillator.start();
+                setTimeout(() => {
+                    oscillator.stop();
+                    audioCtx.close();
+                }, duration * 1000);
+            } catch (e) {
+                console.log('Audio not supported');
+            }
+        };
+
+        const createPopup = (element, text, isSuccess) => {
+            const popup = document.createElement('div');
+            popup.className = 'popup-text';
+            popup.style.color = isSuccess ? 'var(--success)' : 'var(--error)';
+            const rect = element.getBoundingClientRect();
+            popup.style.left = `${rect.left}px`;
+            popup.style.top = `${rect.top}px`;
+            popup.textContent = text;
+            document.body.appendChild(popup);
+            setTimeout(() => popup.remove(), 1000);
+        };
+
+        const generatePattern = () => {
+            patternContainer.innerHTML = '';
+            const patternType = patterns[Math.floor(Math.random() * patterns.length)];
+            currentStep = patternType.step;
+            
+            // Generate random start number within range
+            const [min, max] = patternType.startRange;
+            let start = Math.floor(Math.random() * (max - min + 1)) + min;
+            // Ensure start number aligns with the pattern step
+            start = Math.ceil(start / currentStep) * currentStep;
+            
+            // Generate pattern
+            currentPattern = [];
+            for (let i = 0; i < 4; i++) {
+                currentPattern.push(start);
+                start += currentStep;
+            }
+
+            // Display pattern with last number as input
+            currentPattern.forEach((num, index) => {
+                if (index > 0) {
+                    const arrow = document.createElement('div');
+                    arrow.className = 'arrow';
+                    arrow.textContent = '→';
+                    patternContainer.appendChild(arrow);
+                }
+
+                const box = document.createElement('div');
+                box.className = 'number-box';
+                
+                if (index === currentPattern.length - 1) {
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.autocomplete = 'off';
+                    input.placeholder = '?';
+                    box.appendChild(input);
+                } else {
+                    box.classList.add('filled');
+                    box.textContent = num;
+                }
+                
+                patternContainer.appendChild(box);
+            });
+
+            patternTypeElement.textContent = `Counting by ${patternType.name}!`;
+            hintElement.textContent = "What number comes next in the pattern?";
+
+            // Focus on the input
+            const input = document.querySelector('input');
+            if (input) input.focus();
+        };
+
+        const checkAnswer = () => {
+            const input = document.querySelector('input');
+            if (!input.value) return; // Don't check if input is empty
+
+            const answer = parseInt(input.value);
+            const correct = currentPattern[currentPattern.length - 1];
+            const box = input.parentElement;
+            
+            if (answer === correct) {
+                score++;
+                streak++;
+                scoreElement.textContent = score;
+                streakElement.textContent = streak;
+                box.classList.add('success');
+                
+                // Different celebrations based on streak
+                let celebration = '🌟 Correct! 🌟';
+                if (streak >= 5) celebration = '🔥 On Fire! 🔥';
+                if (streak >= 10) celebration = '⚡ Unstoppable! ⚡';
+                
+                createPopup(box, celebration, true);
+                createOscillator(440 + streak * 10, 0.3);
+                
+                // Automatically generate new pattern after a brief delay
+                setTimeout(generatePattern, 800);
+            } else {
+                streak = 0;
+                streakElement.textContent = streak;
+                box.classList.add('error');
+                setTimeout(() => box.classList.remove('error'), 500);
+                createOscillator(200, 0.3);
+                createPopup(box, 'Try again!', false);
+                hintElement.textContent = `Hint: You're counting by ${currentStep}s!`;
+                input.value = ''; // Clear wrong answer
+                input.focus(); // Refocus on input
+            }
+        };
+
+        checkBtn.addEventListener('click', checkAnswer);
+        newBtn.addEventListener('click', generatePattern);
+
+        // Input validation and auto-check on Enter
+        document.addEventListener('input', (e) => {
+            if (e.target.tagName === 'INPUT') {
+                const value = parseInt(e.target.value);
+                if (value < 0 || value > 100 || isNaN(value)) {
+                    e.target.value = '';
+                }
+            }
+        });
+
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkAnswer();
+            }
+        });
+
+        // Start game
+        generatePattern();
+    </script>
+</body>
+</html>

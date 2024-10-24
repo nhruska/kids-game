@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html>
+<!-- Previous head section and styles remain exactly the same -->
+<head>
+    <title>Word Scramble!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.5);
+            --success: #4ade80;
+            --success-glow: rgba(74, 222, 128, 0.5);
+            --error: #ef4444;
+            --error-glow: rgba(239, 68, 68, 0.5);
+            --warn: #fbbf24;
+            --warn-glow: rgba(251, 191, 36, 0.5);
+            --gold: #ffd700;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(45deg, #1a1a2e, #16213e);
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            max-width: 90vw;
+            width: 500px;
+        }
+
+        h1 {
+            margin: 0 0 1rem;
+            background: linear-gradient(to right, var(--primary), var(--gold));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 20px var(--primary-glow);
+            font-size: 2.5rem;
+        }
+
+        .score {
+            font-size: 1.25rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 1rem;
+        }
+
+        .scrambled-word {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin: 2rem 0;
+            min-height: 80px;
+        }
+
+        .letter {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+                        background 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            text-shadow: 0 0 10px var(--primary-glow);
+            user-select: none;
+        }
+
+        .letter:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .letter.selected {
+            background: var(--primary);
+            transform: scale(0.9);
+        }
+
+        .answer-container {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin: 2rem 0;
+            min-height: 80px;
+        }
+
+        .answer-slot {
+            width: 50px;
+            height: 50px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .button {
+            background: linear-gradient(to right, var(--primary), var(--gold));
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            margin: 0.5rem;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px var(--primary-glow);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .shake {
+            animation: shake 0.2s cubic-bezier(0.36, 0.07, 0.19, 0.97) 3;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .pop {
+            animation: pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .hint {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0); }
+        }
+
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .particles {
+            position: fixed;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            background: var(--gold);
+            border-radius: 50%;
+            animation: particle 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @keyframes particle {
+            0% {
+                transform: scale(1) translate(0, 0);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0) translate(var(--tx), var(--ty));
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Previous HTML structure remains exactly the same -->
+    <div class="game-container">
+        <h1>Word Scramble!</h1>
+        <div class="score">Score: <span id="score">0</span></div>
+        <div class="scrambled-word" id="scrambledWord"></div>
+        <div class="answer-container" id="answerContainer"></div>
+        <button class="button" id="checkButton" disabled>Check Word</button>
+        <button class="button" id="newWordButton">New Word</button>
+        <div class="hint" id="hint"></div>
+    </div>
+
+    <script>
+        const words = [
+            // 3-letter words (easy)
+            {word: 'CAT', hint: 'A furry pet that meows'},
+            {word: 'DOG', hint: 'A friendly pet that barks'},
+            {word: 'SUN', hint: 'It lights up our day'},
+            {word: 'BAT', hint: 'A flying mammal that sleeps upside down'},
+            {word: 'PIG', hint: 'A pink farm animal that says oink'},
+            {word: 'HAT', hint: 'You wear it on your head'},
+            {word: 'BED', hint: 'Where you sleep at night'},
+            {word: 'CUP', hint: 'You drink from this'},
+            {word: 'BOX', hint: 'You can put things inside it'},
+            {word: 'MAP', hint: 'Shows you where to go'},
+            {word: 'BUS', hint: 'Takes many people to school'},
+            {word: 'PEN', hint: 'You write with it'},
+            {word: 'ANT', hint: 'A tiny insect that works hard'},
+            {word: 'BAG', hint: 'Carries your things'},
+            {word: 'FOX', hint: 'A clever orange wild animal'},
+
+            // 4-letter words (medium)
+            {word: 'BIRD', hint: 'It has wings and can fly'},
+            {word: 'TREE', hint: 'It grows tall and has leaves'},
+            {word: 'FISH', hint: 'It swims in water'},
+            {word: 'BEAR', hint: 'A big furry forest animal'},
+            {word: 'DUCK', hint: 'Swims and quacks'},
+            {word: 'FROG', hint: 'Hops and says ribbit'},
+            {word: 'LION', hint: 'King of the jungle'},
+            {word: 'CAKE', hint: 'Birthday treat'},
+            {word: 'STAR', hint: 'Twinkles in the night sky'},
+            {word: 'BOOK', hint: 'Has stories inside'},
+            {word: 'MILK', hint: 'Drink it to grow strong'},
+            {word: 'RAIN', hint: 'Falls from clouds'},
+            {word: 'SHOE', hint: 'Protects your feet'},
+            {word: 'BALL', hint: 'Round toy you can bounce'},
+            {word: 'KITE', hint: 'Flies in the wind'},
+            {word: 'DOOR', hint: 'Walk through it'},
+            {word: 'MOON', hint: 'Glows at night'},
+            {word: 'SNOW', hint: 'White and cold'},
+            {word: 'FARM', hint: 'Where animals live'},
+            {word: 'BOAT', hint: 'Floats on water'},
+
+            // 5-letter words (hard)
+            {word: 'HORSE', hint: 'People ride this animal'},
+            {word: 'SNAKE', hint: 'A long reptile that slithers'},
+            {word: 'CLOUD', hint: 'You see these in the sky'},
+            {word: 'APPLE', hint: 'A fruit that keeps the doctor away'},
+            {word: 'TIGER', hint: 'Striped big cat'},
+            {word: 'PIZZA', hint: 'Round food with cheese on top'},
+            {word: 'BEACH', hint: 'Sandy place by the ocean'},
+            {word: 'WATER', hint: 'Drink this to stay healthy'},
+            {word: 'HOUSE', hint: 'A place to live'},
+            {word: 'PLANT', hint: 'Grows in a garden'},
+            {word: 'SHARK', hint: 'Ocean predator with fins'},
+            {word: 'MOUSE', hint: 'Tiny animal that likes cheese'},
+            {word: 'SWING', hint: 'Fun playground equipment'},
+            {word: 'CLOCK', hint: 'Tells you the time'},
+            {word: 'CANDY', hint: 'Sweet treat'},
+            {word: 'HAPPY', hint: 'How you feel when you smile'},
+            {word: 'QUEEN', hint: 'Female ruler of a kingdom'},
+            {word: 'ROBOT', hint: 'Mechanical helper'},
+            {word: 'MUSIC', hint: 'Pleasant sounds to listen to'},
+            {word: 'PAPER', hint: 'Write or draw on it'},
+
+            // 6-letter words (expert)
+            {word: 'MONKEY', hint: 'Playful animal that likes bananas'},
+            {word: 'RABBIT', hint: 'Hops and has long ears'},
+            {word: 'PENCIL', hint: 'Write with this in school'},
+            {word: 'GARDEN', hint: 'Where flowers grow'},
+            {word: 'DOCTOR', hint: 'Helps you when you are sick'},
+            {word: 'SCHOOL', hint: 'Place where you learn'},
+            {word: 'PUPPET', hint: 'Toy you can put on your hand'},
+            {word: 'ROCKET', hint: 'Flies to space'},
+            {word: 'DRAGON', hint: 'Magical fire-breathing creature'},
+            {word: 'ORANGE', hint: 'Fruit that is also a color'},
+            {word: 'WINTER', hint: 'Cold season with snow'},
+            {word: 'CIRCLE', hint: 'Round shape like a ball'},
+            {word: 'CAMERA', hint: 'Takes pictures'},
+            {word: 'JACKET', hint: 'Wear it when it is cold'},
+            {word: 'TURTLE', hint: 'Slow animal with a shell'}
+        ];
+
+        // Rest of the JavaScript code remains exactly the same
+        let currentWord = '';
+        let score = 0;
+        let selectedLetters = [];
+
+        // All previous functions remain exactly the same
+        function shuffleWord(word) {
+            return word.split('').sort(() => Math.random() - 0.5).join('');
+        }
+
+        function createParticles(x, y, count = 20) {
+            const particles = document.createElement('div');
+            particles.className = 'particles';
+            document.body.appendChild(particles);
+
+            for (let i = 0; i < count; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.width = Math.random() * 8 + 4 + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+                particle.style.setProperty('--tx', (Math.random() - 0.5) * 200 + 'px');
+                particle.style.setProperty('--ty', (Math.random() * -200 - 50) + 'px');
+                particles.appendChild(particle);
+            }
+
+            setTimeout(() => particles.remove(), 1000);
+        }
+
+        function playSound(type) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            switch(type) {
+                case 'click':
+                    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.1);
+                    break;
+                case 'success':
+                    oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.2);
+                    break;
+                case 'error':
+                    oscillator.frequency.setValueAtTime(300, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.2);
+                    break;
+            }
+        }
+
+        function setNewWord() {
+            const wordObj = words[Math.floor(Math.random() * words.length)];
+            currentWord = wordObj.word;
+            document.getElementById('hint').textContent = `Hint: ${wordObj.hint}`;
+            selectedLetters = [];
+            
+            const scrambledWord = document.getElementById('scrambledWord');
+            scrambledWord.innerHTML = '';
+            
+            const shuffled = shuffleWord(currentWord);
+            shuffled.split('').forEach((letter, index) => {
+                const letterDiv = document.createElement('div');
+                letterDiv.className = 'letter floating';
+                letterDiv.style.animationDelay = `${index * 0.1}s`;
+                letterDiv.textContent = letter;
+                letterDiv.addEventListener('click', () => selectLetter(letterDiv, letter));
+                scrambledWord.appendChild(letterDiv);
+            });
+
+            const answerContainer = document.getElementById('answerContainer');
+            answerContainer.innerHTML = '';
+            for (let i = 0; i < currentWord.length; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'answer-slot';
+                answerContainer.appendChild(slot);
+            }
+
+            document.getElementById('checkButton').disabled = true;
+        }
+
+        function selectLetter(letterDiv, letter) {
+            playSound('click');
+            
+            if (letterDiv.classList.contains('selected')) {
+                return;
+            }
+
+            letterDiv.classList.add('selected');
+            selectedLetters.push({ letter, div: letterDiv });
+            
+            const emptySlot = document.querySelector('.answer-slot:empty');
+            if (emptySlot) {
+                emptySlot.textContent = letter;
+                emptySlot.classList.add('pop');
+                setTimeout(() => emptySlot.classList.remove('pop'), 300);
+            }
+
+            if (selectedLetters.length === currentWord.length) {
+                document.getElementById('checkButton').disabled = false;
+            }
+        }
+
+        function checkWord() {
+            const answer = Array.from(document.querySelectorAll('.answer-slot'))
+                .map(slot => slot.textContent)
+                .join('');
+
+            if (answer === currentWord) {
+                playSound('success');
+                score += 10;
+                document.getElementById('score').textContent = score;
+                
+                // Create particles from each letter
+                document.querySelectorAll('.answer-slot').forEach(slot => {
+                    const rect = slot.getBoundingClientRect();
+                    createParticles(rect.left + rect.width / 2, rect.top + rect.height / 2);
+                });
+
+                setTimeout(setNewWord, 1000);
+            } else {
+                playSound('error');
+                document.getElementById('answerContainer').classList.add('shake');
+                setTimeout(() => {
+                    document.getElementById('answerContainer').classList.remove('shake');
+                    resetAnswer();
+                }, 600);
+            }
+        }
+
+        function resetAnswer() {
+            selectedLetters.forEach(({ div }) => div.classList.remove('selected'));
+            selectedLetters = [];
+            document.querySelectorAll('.answer-slot').forEach(slot => slot.textContent = '');
+            document.getElementById('checkButton').disabled = true;
+        }
+
+        document.getElementById('checkButton').addEventListener('click', checkWord);
+        document.getElementById('newWordButton').addEventListener('click', () => {
+            playSound('click');
+            setNewWord();
+        });
+
+        // Start the game
+        setNewWord();
+    </script>
+</body>
+</html>

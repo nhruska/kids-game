@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Word Chain 📝</title>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.5);
+            --success: #4ade80;
+            --success-glow: rgba(74, 222, 128, 0.5);
+            --error: #ef4444;
+            --error-glow: rgba(239, 68, 68, 0.5);
+            --warn: #fbbf24;
+            --warn-glow: rgba(251, 191, 36, 0.5);
+            --gold: #ffd700;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            font-family: system-ui, sans-serif;
+            color: white;
+            padding: 1rem;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            margin: 0 0 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 10px var(--primary-glow));
+        }
+
+        .score {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-shadow: 0 0 10px var(--primary-glow);
+            margin-bottom: 1rem;
+        }
+
+        .chain-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin: 1.5rem 0;
+            min-height: 100px;
+        }
+
+        .word-box {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            position: relative;
+        }
+
+        .highlight {
+            color: var(--warn);
+        }
+
+        .input-container {
+            margin: 2rem 0;
+            position: relative;
+        }
+
+        input {
+            width: 100%;
+            max-width: 300px;
+            padding: 1rem;
+            font-size: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.75rem;
+            color: white;
+            text-align: center;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-glow));
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 1rem;
+            color: white;
+            font-size: 1.25rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            margin: 0.5rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .hint {
+            color: var(--warn);
+            font-size: 1.5rem;
+            margin: 1rem 0;
+            min-height: 1.5rem;
+        }
+
+        .arrow {
+            color: var(--primary);
+            font-size: 2rem;
+            margin: 0 0.5rem;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        .shake {
+            animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+
+        .pulse {
+            animation: pulse 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .popup-text {
+            position: fixed;
+            pointer-events: none;
+            font-weight: bold;
+            font-size: 2.5rem;
+            animation: floatUp 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            z-index: 100;
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-50px); opacity: 0; }
+        }
+
+        .timer {
+            font-size: 1.25rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .category-tag {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            font-size: 0.8rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.5rem;
+            background: var(--primary-glow);
+            color: white;
+        }
+
+        .bonus-word {
+            border-color: var(--gold);
+            box-shadow: 0 0 10px var(--gold);
+        }
+
+        /* Word bank display */
+        .word-bank {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 10;
+        }
+
+        .word-bank.show {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 0.5rem;
+        }
+
+        .word-suggestion {
+            font-size: 0.9rem;
+            padding: 0.3rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.3rem;
+            cursor: pointer;
+        }
+
+        .word-suggestion:hover {
+            background: var(--primary-glow);
+        }
+
+        /* Input container modifications */
+        .input-container {
+            position: relative;
+            margin: 2rem 0;
+        }
+
+        .help-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--warn);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>3-Letter Word Chain 📝</h1>
+        <div class="score">Chain Length: <span id="score">0</span> 🔗</div>
+        <div class="timer">Time: <span id="timer">45</span>s</div>
+        <div class="hint" id="hint">Type a three-letter word!</div>
+        <div id="chainDisplay" class="chain-display">
+            <!-- Words will appear here -->
+        </div>
+        <div class="input-container">
+            <input type="text" id="wordInput" maxlength="3" placeholder="Type a 3-letter word..." autocomplete="off">
+            <button class="help-btn" id="helpBtn">💡</button>
+            <div class="word-bank" id="wordBank">
+                <!-- Suggestions will appear here -->
+            </div>
+        </div>
+        <button class="btn" id="submitBtn">Submit Word ✨</button>
+        <button class="btn" id="newBtn">New Game 🎲</button>
+    </div>
+
+    <script>
+        // Comprehensive 3-letter word list organized by categories
+        const wordList = {
+            animals: ['ant', 'bat', 'cat', 'dog', 'eel', 'fox', 'hen', 'owl', 'pig', 'rat', 'yak'],
+            actions: ['add', 'beg', 'cut', 'dig', 'eat', 'get', 'hit', 'jog', 'run', 'sit', 'win', 'zip', 'zoo', 'zap'],
+            objects: ['bag', 'bed', 'cup', 'fan', 'hat', 'jar', 'key', 'map', 'pen', 'rug', 'toy', 'van'],
+            nature: ['air', 'bog', 'dew', 'fog', 'ice', 'log', 'mud', 'sky', 'sun', 'web', 'wet'],
+            feelings: ['bad', 'fun', 'joy', 'mad', 'sad', 'shy', 'sly'],
+            colors: ['red', 'tan'],
+            simple: ['all', 'and', 'any', 'are', 'big', 'can', 'did', 'end', 'for', 'had', 
+                    'has', 'him', 'his', 'how', 'new', 'not', 'now', 'old', 'one', 'out', 
+                    'she', 'the', 'too', 'use', 'was', 'way', 'who', 'yes', 'yet', 'you']
+        };
+
+        // Flatten word list for easy lookup
+        const allWords = Object.values(wordList).flat();
+
+        // Get word category
+        const getWordCategory = (word) => {
+            for (const [category, words] of Object.entries(wordList)) {
+                if (words.includes(word)) return category;
+            }
+            return 'other';
+        };
+
+        // Get possible words starting with a letter
+        const getPossibleWords = (letter) => {
+            return allWords.filter(word => word.startsWith(letter));
+        };
+
+        // DOM elements
+        const chainDisplay = document.getElementById('chainDisplay');
+        const wordInput = document.getElementById('wordInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const newBtn = document.getElementById('newBtn');
+        const scoreElement = document.getElementById('score');
+        const hintElement = document.getElementById('hint');
+        const timerElement = document.getElementById('timer');
+        const helpBtn = document.getElementById('helpBtn');
+        const wordBank = document.getElementById('wordBank');
+
+        let score = 0;
+        let usedWords = [];
+        let timeLeft = 45;
+        let timer;
+
+        // Previous audio function remains the same
+        const createOscillator = (frequency, duration) => {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.value = frequency;
+                
+                gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+                
+                oscillator.start();
+                setTimeout(() => {
+                    oscillator.stop();
+                    audioCtx.close();
+                }, duration * 1000);
+            } catch (e) {
+                console.log('Audio not supported');
+            }
+        };
+
+        const createWordBox = (word, isNew = false) => {
+            const box = document.createElement('div');
+            box.className = 'word-box' + (isNew ? ' pulse' : '');
+            
+            // Add category tag
+            const category = getWordCategory(word);
+            const categoryTag = document.createElement('div');
+            categoryTag.className = 'category-tag';
+            categoryTag.textContent = category;
+            box.appendChild(categoryTag);
+            
+            // Word display with highlighted letter
+            if (usedWords.length > 0) {
+                const lastWord = usedWords[usedWords.length - 1];
+                const lastLetter = lastWord[lastWord.length - 1];
+                if (word[0] === lastLetter) {
+                    box.innerHTML += `<span class="highlight">${word[0]}</span>${word.slice(1)}`;
+                } else {
+                    box.innerHTML += word;
+                }
+            } else {
+                box.innerHTML += word;
+            }
+
+            if (chainDisplay.children.length > 0) {
+                const arrow = document.createElement('div');
+                arrow.className = 'arrow';
+                arrow.textContent = '→';
+                chainDisplay.appendChild(arrow);
+            }
+            
+            chainDisplay.appendChild(box);
+            chainDisplay.scrollLeft = chainDisplay.scrollWidth;
+        };
+
+        const showWordBank = () => {
+            wordBank.innerHTML = '';
+            let suggestions = [];
+            
+            if (usedWords.length > 0) {
+                const lastWord = usedWords[usedWords.length - 1];
+                const lastLetter = lastWord[lastWord.length - 1];
+                suggestions = getPossibleWords(lastLetter)
+                    .filter(word => !usedWords.includes(word))
+                    .sort(() => Math.random() - 0.5)
+                    .slice(0, 12);
+            } else {
+                suggestions = allWords
+                    .sort(() => Math.random() - 0.5)
+                    .slice(0, 12);
+            }
+            
+            suggestions.forEach(word => {
+                const suggestion = document.createElement('div');
+                suggestion.className = 'word-suggestion';
+                suggestion.textContent = word;
+                suggestion.onclick = () => {
+                    wordInput.value = word;
+                    wordBank.classList.remove('show');
+                    checkWord();
+                };
+                wordBank.appendChild(suggestion);
+            });
+            
+            wordBank.classList.add('show');
+        };
+
+        helpBtn.onclick = () => {
+            wordBank.classList.toggle('show');
+            if (wordBank.classList.contains('show')) {
+                showWordBank();
+            }
+        };
+
+        // Click outside to close word bank
+        document.addEventListener('click', (e) => {
+            if (!wordBank.contains(e.target) && e.target !== helpBtn) {
+                wordBank.classList.remove('show');
+            }
+        });
+
+        const startGame = () => {
+            clearInterval(timer);
+            score = 0;
+            usedWords = [];
+            timeLeft = 45;
+            chainDisplay.innerHTML = '';
+            scoreElement.textContent = score;
+            timerElement.textContent = timeLeft;
+            wordInput.value = '';
+            wordInput.disabled = false;
+            submitBtn.disabled = false;
+            hintElement.textContent = "Type any three-letter word to start!";
+            
+            timer = setInterval(() => {
+                timeLeft--;
+                timerElement.textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+
+            wordInput.focus();
+        };
+
+        const endGame = () => {
+            clearInterval(timer);
+            wordInput.disabled = true;
+            submitBtn.disabled = true;
+            hintElement.textContent = `Game Over! You made a chain of ${score} words!`;
+            wordBank.classList.remove('show');
+        };
+
+        const checkWord = () => {
+            const word = wordInput.value.toLowerCase().trim();
+            
+            if (word.length !== 3) {
+                showError("Word must be exactly 3 letters!");
+                return;
+            }
+            if (usedWords.includes(word)) {
+                showError("Word already used!");
+                return;
+            }
+            if (!allWords.includes(word)) {
+                showError("Word not in our list!");
+                return;
+            }
+
+            if (usedWords.length > 0) {
+                const lastWord = usedWords[usedWords.length - 1];
+                const lastLetter = lastWord[lastWord.length - 1];
+                if (word[0] !== lastLetter) {
+                    showError(`Word must start with '${lastLetter}'!`);
+                    return;
+                }
+            }
+
+            // Word is valid
+            usedWords.push(word);
+            createWordBox(word, true);
+            score++;
+            scoreElement.textContent = score;
+            wordInput.value = '';
+            createOscillator(440 + score * 10, 0.3);
+            
+            const lastLetter = word[word.length - 1];
+            const possibleNextWords = getPossibleWords(lastLetter)
+                .filter(w => !usedWords.includes(w));
+            
+            if (possibleNextWords.length === 0) {
+                hintElement.textContent = "No more possible words! Game Over!";
+                endGame();
+            } else {
+                hintElement.textContent = `Next word must start with '${lastLetter}'!`;
+                timeLeft = Math.min(timeLeft + 3, 45);
+                timerElement.textContent = timeLeft;
+            }
+        };
+
+        const showError = (message) => {
+            hintElement.textContent = message;
+            wordInput.classList.add('shake');
+            createOscillator(200, 0.3);
+            setTimeout(() => {
+                wordInput.classList.remove('shake');
+            }, 500);
+        };
+
+        submitBtn.addEventListener('click', checkWord);
+        newBtn.addEventListener('click', startGame);
+        
+        wordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkWord();
+            }
+        });
+
+        // Only allow letters
+        wordInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/[^a-z]/gi, '').toLowerCase();
+        });
+
+        // Start first game
+        startGame();
+    </script>
+</body>
+</html>

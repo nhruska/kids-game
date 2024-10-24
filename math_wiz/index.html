@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dopamine Rush Math Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="container" class="container full-screen">
+        <div id="game-header" class="header">
+            <h1 class="title">Math Rush!</h1>
+            <div id="progress" class="progress-container"><div class="progress" id="progress-bar"></div></div>
+            <p id="highScore" class="high-score-badge">High Score: 0</p>
+            <button id="startBtn" class="start-button">Start Game</button>
+        </div>
+        <div id="game" class="game">
+            <p id="timer" class="timer-display">Time Left: <span id="time">30</span>s</p>
+            <p id="equation" class="equation">3 + 4 = ?</p>
+            <div id="keypad" class="grid keypad-layout">
+                <button class="key tile">1</button>
+                <button class="key tile">2</button>
+                <button class="key tile">3</button>
+                <button class="key tile">4</button>
+                <button class="key tile">5</button>
+                <button class="key tile">6</button>
+                <button class="key tile">7</button>
+                <button class="key tile">8</button>
+                <button class="key tile">9</button>
+                <button class="spacer"></button>
+                <button class="key tile">0</button>
+                <button class="spacer"></button>
+            </div>
+            <p id="score" class="stat">Score: <span id="scoreValue" class="value">0</span></p>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>

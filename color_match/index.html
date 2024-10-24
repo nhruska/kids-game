@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Match</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game">
+        <div id="container" class="container">
+            <div class="header">
+                <div class="high-score-badge">
+                    <span class="crown">👑</span>
+                    <span id="highScore">0</span>
+                </div>
+                <h1 class="title">Color Match</h1>
+            </div>
+            
+            <div class="progress-container">
+                <div id="progress" class="progress"></div>
+                <div id="powerUpIndicator" class="power-up-indicator">
+                    <div class="power-up-dots">
+                        <div class="dot" data-level="1"></div>
+                        <div class="dot" data-level="2"></div>
+                        <div class="dot" data-level="3"></div>
+                    </div>
+                    <div class="power-up-label">Combo Multiplier: <span id="multiplier">1x</span></div>
+                </div>
+            </div>
+
+            <div class="timer-display" id="timer">30</div>
+            
+            <div class="stats">
+                <div class="stat">Score: <span id="score" class="value">0</span></div>
+            </div>
+            
+            <div id="target" class="target"></div>
+            <div id="grid" class="grid"></div>
+            <button id="startBtn">Start Game</button>
+        </div>
+    </div>
+    
+    <audio id="bgMusic" loop>
+        <source src="data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAEAAABVgANTU1NTU1Q0NDQ0NDUFBQUFBQXl5eXl5ea2tra2tra3l5eXl5eYaGhoaGhpSUlJSUlKGhoaGhoaGvr6+vr6+8vLy8vLzKysrKysrX19fX19fX5eXl5eXl8vLy8vLy////////AAAAAExhdmM1OC4xMwAAAAAAAAAAAAAAACQCgAAAAAAAAAVY82AhbwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/+MYxAALACwAAP/AADwQKVE9YWDGPkQWpT66yk4+zIiYPoTUaT3tnU+peR0uH/+eTs2Xv+yp0nlvq/f+eHqupSD3KCEX/+MYxA8L0DU0AP+0ANkwmYaAQkLqBzpZDLPz6aopR8ufr6deqPzqf//PJpNvDHW3sW7/+G+srSlxNvMw9jGKEYYhgGKE/+MYxBoK4DVcAP8WAO8zKTTdvTvQCGpRzpvz6aolD8ufr6lqj86n//8/90WYpmXh4Z5a///85WrWjl50GkMUcwjj/+MYxCUNoDU4AP8eAF00gkLqDnSyGWfn01RKH58/X1LVH51P//58mky8Mdbe5bv/4b6ytamY28zA3WMY4xjGMdVq/+MYxC4NUDVkAP8eAF00qjn3OqR7pfxcG/48/vQ/9cw7//G56Q77Gqv4p//+7/8a5IkqzVe5C6HQGhULn/QGgVCo/+MYxDcNoDVsAP8WAOU+Y2uNIzee/Z9PJFQLnz9ZDvHScGfn0yfzopRvHf//8/+RrJ1KslUvQth0BwCn/QHA6Ax1/+MYxEENkDV0AP7WAP9cp5BiP3ye675/XFw7nz6aP2fX1yGt/LZ+srXRzHf1/+P/LJprZU3IXQ+k106QqF/6BUCg/+MYxEwN4DVkAP7WAP8/IKpp/5/XL6P/p8/qf8/5/XTRytNHPk09TvD3ps/rJ//+f+cKnYl49THD3DCSYe4wkMJD/+MYxFQN0DVsAP6WAO9J1NIsj//z60P/r/09/0/nv99aHt0cw+rp5/+2/+190VY5h4Zo7/MH4qESz/3CFhAw7//x/+MYxF4OaDV0AP7OAOZ/z/+vnv+/defn/P+/48/r56yNY5/4Z//k/+mhGsswkM0cw9w4QSP/3CFBBQsPcO8P8/+MYxGUNsDV4AP7WAP7/////fW56y/rL/+/QG0d5fv0/5fyaeGf/4a/6y3MwkM0cxBQoPcIQGE/pcBCD//ABCD+MYxG8NyDVwAP7WAFgfTv/LIsZ/Xs6P/u/TZyKOff///p5/+2/+vtXq8whGYQGEGhAYQGEBhAYQGP/AYQGEBj+MYxHcOCDVwAP7WABAYQGP//////////////////6w//+AwgMf/AYQGEBhAYQGEBhAY/gMIDH/pMQU1FMy45/+MYxH4O0DVwAP7WABM1VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMu/+MYxHsNaDWAAP6WABM1VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV/+MYxIQNaDWAAP7WABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV/+MYxIkNEFWoAP8WAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV/+MYxJEOCDVsAP8WAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV/+MYxJQNaDV4AP8WAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVUxBTUU/+MYxJwNmDWAAP7WABM1VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVMQU1F/+MYxKQNaDWAAP7WABM1VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/MYxKMAAP4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" />
+    </audio>
+    <script src="game.js"></script>
+</body>
+</html>

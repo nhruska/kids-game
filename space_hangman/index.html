@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Space Hangman</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.5);
+            --success: #4ade80;
+            --success-glow: rgba(74, 222, 128, 0.5);
+            --error: #ef4444;
+            --error-glow: rgba(239, 68, 68, 0.5);
+            --warn: #fbbf24;
+            --warn-glow: rgba(251, 191, 36, 0.5);
+            --gold: #ffd700;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(45deg, #1a1a2e, #16213e);
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            max-width: 90vw;
+            width: 800px;
+        }
+
+        h1 {
+            margin: 0 0 1rem;
+            background: linear-gradient(to right, var(--primary), var(--gold));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 20px var(--primary-glow);
+            font-size: 2.5rem;
+        }
+
+        .game-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin: 2rem 0;
+            align-items: start;
+        }
+
+        .rocket-display {
+            aspect-ratio: 1;
+            position: relative;
+            border-radius: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+        }
+
+        .rocket-part {
+            position: absolute;
+            opacity: 0;
+            transition: opacity 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .rocket-part.visible {
+            opacity: 1;
+        }
+
+        .word-display {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+
+        .letter-slot {
+            width: 40px;
+            height: 40px;
+            border-bottom: 3px solid var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .keyboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+            gap: 0.5rem;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .key {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .key:hover:not(:disabled) {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .key:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .key.correct {
+            background: var(--success);
+        }
+
+        .key.wrong {
+            background: var(--error);
+        }
+
+        .hint {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.1rem;
+            margin: 1rem 0;
+        }
+
+        .status {
+            font-size: 1.2rem;
+            margin: 1rem 0;
+            min-height: 1.5em;
+        }
+
+        .button {
+            background: linear-gradient(to right, var(--primary), var(--gold));
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            margin: 0.5rem;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px var(--primary-glow);
+        }
+
+        .score {
+            font-size: 1.25rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 1rem;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .pop {
+            animation: pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .particles {
+            position: fixed;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            background: var(--gold);
+            border-radius: 50%;
+            animation: particle 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @keyframes particle {
+            0% {
+                transform: scale(1) translate(0, 0);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0) translate(var(--tx), var(--ty));
+                opacity: 0;
+            }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0); }
+        }
+
+        .win-animation {
+            animation: float 2s ease-in-out infinite;
+        }
+
+        @media (max-width: 600px) {
+            .game-area {
+                grid-template-columns: 1fr;
+            }
+            
+            .letter-slot {
+                width: 30px;
+                height: 30px;
+                font-size: 1.2rem;
+            }
+            
+            .keyboard {
+                gap: 0.25rem;
+            }
+            
+            .key {
+                padding: 0.4rem;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Space Hangman</h1>
+        <div class="score">Score: <span id="score">0</span></div>
+        <div class="game-area">
+            <div class="rocket-display" id="rocketDisplay">
+                <svg viewBox="0 0 200 200" width="100%" height="100%">
+                    <!-- Base -->
+                    <path class="rocket-part" id="part1" fill="#3b82f6" d="M80,180 L120,180 L110,160 L90,160 Z" />
+                    <!-- Body bottom -->
+                    <path class="rocket-part" id="part2" fill="#60a5fa" d="M90,160 L110,160 L110,120 L90,120 Z" />
+                    <!-- Body middle -->
+                    <path class="rocket-part" id="part3" fill="#93c5fd" d="M90,120 L110,120 L110,80 L90,80 Z" />
+                    <!-- Body top -->
+                    <path class="rocket-part" id="part4" fill="#bfdbfe" d="M90,80 L110,80 L110,40 L90,40 Z" />
+                    <!-- Nose cone -->
+                    <path class="rocket-part" id="part5" fill="#dbeafe" d="M90,40 L100,20 L110,40 Z" />
+                    <!-- Left fin -->
+                    <path class="rocket-part" id="part6" fill="#1d4ed8" d="M70,160 L90,160 L90,140 Z" />
+                    <!-- Right fin -->
+                    <path class="rocket-part" id="part7" fill="#1d4ed8" d="M110,160 L130,160 L110,140 Z" />
+                    <!-- Window -->
+                    <circle class="rocket-part" id="part8" cx="100" cy="60" r="8" fill="#fef3c7" />
+                </svg>
+            </div>
+            <div>
+                <div class="word-display" id="wordDisplay"></div>
+                <div class="hint" id="hint"></div>
+                <div class="status" id="status"></div>
+            </div>
+        </div>
+        <div class="keyboard" id="keyboard"></div>
+        <button class="button" id="newGameButton">New Game</button>
+        <script src="game.js"></script>
+    </div>
+</body>
+</html>
