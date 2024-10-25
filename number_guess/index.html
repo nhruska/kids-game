@@ -49,10 +49,26 @@
         .hot { color: #ef4444; }
         .warm { color: #f59e0b; }
         .cool { color: #3b82f6; }
+
+        .high-score-banner {
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            text-align: center;
+            font-size: 1.2em;
+            color: #f59e0b;
+        }
+
+        #guess {
+            overflow: hidden;
+            width: 90%;
+        }
     </style>
 </head>
 <body>
     <div class="game">
+        <div class="high-score-banner">
+            Low Score: <span id="highScore">0</span>
+        </div>
         <h1>Guess (1-100)</h1>
         <h2 id="hint">Take a guess!</h2>
         <input type="number" id="guess" min="1" max="100">
@@ -66,6 +82,26 @@
     <script>
         let number = Math.floor(Math.random() * 100) + 1;
         let guesses = 0;
+        function getHighScore() {
+            try {
+                return parseInt(localStorage.getItem('gameHighScore')) || 0;
+            } catch {
+                return 0;
+            }
+        }
+
+        function saveHighScore(score) {
+            try {
+                localStorage.setItem('gameHighScore', score);
+                return true;
+            } catch {
+                return false;
+            }
+        }
+
+        let highScore = getHighScore();
+        document.getElementById('highScore').textContent = highScore;
+
         
         function checkGuess() {
             let guess = Number(document.getElementById('guess').value);
@@ -75,10 +111,19 @@
             
             let hint = document.getElementById('hint');
             if (guess === number) {
+                // high score?
+                if (guesses < highScore || highScore === 0) {
+                    highScore = guesses;
+                    saveHighScore(highScore);
+                    document.getElementById('highScore').textContent = highScore;
+                }
                 hint.textContent = 'YOU WIN! 🎉';
                 hint.className = '';
+            } else if (diff < 2) {
+                hint.textContent = 'SUPER HOT! 🔥🔥';
+                hint.className = 'hot';
             } else if (diff < 5) {
-                hint.textContent = 'SUPER HOT! 🔥';
+                hint.textContent = 'Hotter! 🔥';
                 hint.className = 'hot';
             } else if (diff < 10) {
                 hint.textContent = 'Hot! 🌡️';
