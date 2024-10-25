@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Guess!</title>
+    <style>
+        body { 
+            background: #1a1a2e;
+            color: white;
+            font-family: system-ui;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .game {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 300px;
+            margin: auto;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            font-size: 24px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            text-align: center;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 20px;
+            border-radius: 5px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .hot { color: #ef4444; }
+        .warm { color: #f59e0b; }
+        .cool { color: #3b82f6; }
+    </style>
+</head>
+<body>
+    <div class="game">
+        <h1>Guess (1-100)</h1>
+        <h2 id="hint">Take a guess!</h2>
+        <input type="number" id="guess" min="1" max="100">
+        <div>
+            <button onclick="checkGuess()">Guess!</button>
+            <button onclick="newGame()">New</button>
+        </div>
+        <p>Guesses: <span id="count">0</span></p>
+    </div>
+
+    <script>
+        let number = Math.floor(Math.random() * 100) + 1;
+        let guesses = 0;
+        
+        function checkGuess() {
+            let guess = Number(document.getElementById('guess').value);
+            let diff = Math.abs(guess - number);
+            guesses++;
+            document.getElementById('count').textContent = guesses;
+            
+            let hint = document.getElementById('hint');
+            if (guess === number) {
+                hint.textContent = 'YOU WIN! 🎉';
+                hint.className = '';
+            } else if (diff < 5) {
+                hint.textContent = 'SUPER HOT! 🔥';
+                hint.className = 'hot';
+            } else if (diff < 10) {
+                hint.textContent = 'Hot! 🌡️';
+                hint.className = 'warm';
+            } else if (diff < 20) {
+                hint.textContent = 'Warm 😊';
+                hint.className = 'warm';
+            } else {
+                hint.textContent = 'Cold ❄️';
+                hint.className = 'cool';
+            }
+            document.getElementById('guess').value = '';
+            document.getElementById('guess').focus();
+        }
+
+        function newGame() {
+            number = Math.floor(Math.random() * 100) + 1;
+            guesses = 0;
+            document.getElementById('count').textContent = '0';
+            document.getElementById('hint').textContent = 'Take a guess!';
+            document.getElementById('hint').className = '';
+            document.getElementById('guess').value = '';
+            document.getElementById('guess').focus();
+        }
+
+        document.getElementById('guess').addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') checkGuess();
+        });
+    </script>
+</div>
+</body>
+</html>

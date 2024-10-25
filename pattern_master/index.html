@@ -1,10 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Number Patterns 🔢</title>
+    <title>Pattern Master 🎮</title>
     <style>
         :root {
             --primary: #3b82f6;
@@ -27,7 +24,6 @@
             background: linear-gradient(135deg, #1a1a2e, #16213e);
             font-family: system-ui, sans-serif;
             color: white;
-            padding: 1rem;
         }
 
         .game-container {
@@ -38,8 +34,6 @@
             padding: 2rem;
             border-radius: 1rem;
             text-align: center;
-            max-width: 600px;
-            width: 100%;
         }
 
         h1 {
@@ -57,79 +51,46 @@
             margin-bottom: 1rem;
         }
 
-        .pattern-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        .pattern-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 1rem;
-            margin: 2rem auto;
-            flex-wrap: wrap;
+            margin: 2rem 0;
         }
 
-        .number-box {
-            width: 80px;
-            height: 80px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 3px solid rgba(255, 255, 255, 0.1);
+        .pattern-cell {
+            width: 100px;
+            height: 100px;
             border-radius: 1rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 2rem;
-            font-weight: bold;
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .number-box.filled {
-            background: var(--primary-glow);
-            border-color: var(--primary);
-        }
-
-        .number-box input {
-            width: 100%;
-            height: 100%;
-            background: none;
-            border: none;
-            text-align: center;
-            font-size: 2rem;
-            font-weight: bold;
-            color: white;
-            font-family: inherit;
-        }
-
-        .number-box input:focus {
-            outline: none;
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+                        background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 0.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.2);
         }
 
-        .number-box.success {
-            background: var(--success-glow);
-            border-color: var(--success);
+        .pattern-cell:hover {
+            transform: translateY(-2px);
+        }
+
+        .pattern-cell:active {
+            transform: scale(0.95);
+        }
+
+        .pattern-cell.active {
             animation: pulse 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .number-box.error {
-            animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-        }
-
-        .pattern-type {
-            font-size: 1.5rem;
-            color: var(--warn);
-            margin: 1rem 0;
         }
 
         .btn {
             background: linear-gradient(135deg, var(--primary), var(--primary-glow));
             border: none;
-            padding: 1rem 2rem;
-            border-radius: 1rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
             color: white;
-            font-size: 1.25rem;
             font-weight: bold;
             cursor: pointer;
-            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-            margin: 0.5rem;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+                        opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .btn:hover {
@@ -140,17 +101,9 @@
             transform: scale(0.95);
         }
 
-        .hint {
-            color: var(--warn);
-            font-size: 1.5rem;
-            margin: 1rem 0;
-            min-height: 1.5rem;
-        }
-
-        .arrow {
-            color: var(--primary);
-            font-size: 2rem;
-            margin: 0 0.5rem;
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         @keyframes pulse {
@@ -159,218 +112,175 @@
             100% { transform: scale(1); }
         }
 
-        @keyframes shake {
-            10%, 90% { transform: translate3d(-1px, 0, 0); }
-            20%, 80% { transform: translate3d(2px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-            40%, 60% { transform: translate3d(4px, 0, 0); }
-        }
-
-        .popup-text {
-            position: fixed;
+        .combo-text {
+            position: absolute;
+            animation: floatUp 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
             pointer-events: none;
             font-weight: bold;
-            font-size: 2.5rem;
-            animation: floatUp 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-            z-index: 100;
-            text-shadow: 0 0 10px rgba(0,0,0,0.5);
+            background: linear-gradient(135deg, var(--gold), var(--warn));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         @keyframes floatUp {
             0% { transform: translateY(0); opacity: 1; }
             100% { transform: translateY(-50px); opacity: 0; }
         }
-        
-        .streak {
-            font-size: 1.2rem;
-            color: var(--gold);
-            margin-bottom: 1rem;
+
+        .shake {
+            animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
         }
     </style>
 </head>
 <body>
     <div class="game-container">
-        <h1>Number Patterns 🔢</h1>
-        <div class="score">Score: <span id="score">0</span> ⭐</div>
-        <div class="streak">Streak: <span id="streak">0</span> 🔥</div>
-        <div class="pattern-type" id="patternType">Counting by...</div>
-        <div class="hint" id="hint">What number comes next?</div>
-        <div id="patternContainer" class="pattern-container">
-            <!-- Pattern will be generated here -->
+        <h1>Pattern Master 🎮</h1>
+        <div class="score">Score: <span id="score">0</span></div>
+        <div class="pattern-grid" id="grid">
+            <div class="pattern-cell" data-index="0"></div>
+            <div class="pattern-cell" data-index="1"></div>
+            <div class="pattern-cell" data-index="2"></div>
+            <div class="pattern-cell" data-index="3"></div>
         </div>
-        <button class="btn" id="checkBtn">Check Answer ✨</button>
-        <button class="btn" id="newBtn">New Pattern 🎲</button>
+        <button class="btn" id="startBtn">Start Game</button>
     </div>
 
     <script>
-        const patternContainer = document.getElementById('patternContainer');
-        const checkBtn = document.getElementById('checkBtn');
-        const newBtn = document.getElementById('newBtn');
+        const cells = document.querySelectorAll('.pattern-cell');
+        const startBtn = document.getElementById('startBtn');
         const scoreElement = document.getElementById('score');
-        const streakElement = document.getElementById('streak');
-        const hintElement = document.getElementById('hint');
-        const patternTypeElement = document.getElementById('patternType');
+        const container = document.querySelector('.game-container');
 
-        let score = 0;
-        let streak = 0;
-        let currentPattern = [];
-        let currentStep = 0;
-
-        const patterns = [
-            { step: 2, name: "2s", max: 20, startRange: [2, 8] },
-            { step: 5, name: "5s", max: 50, startRange: [5, 20] },
-            { step: 10, name: "10s", max: 100, startRange: [10, 40] }
+        const colors = [
+            'var(--primary)',
+            'var(--success)',
+            'var(--error)',
+            'var(--warn)'
         ];
 
-        // Previous audio functions remain the same
+        let pattern = [];
+        let playerPattern = [];
+        let score = 0;
+        let isPlaying = false;
+
+        // Initialize cell colors
+        cells.forEach((cell, index) => {
+            cell.style.backgroundColor = colors[index];
+            cell.style.opacity = '0.5';
+        });
+
+        // Sound effects
         const createOscillator = (frequency, duration) => {
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                
-                oscillator.type = 'sine';
-                oscillator.frequency.value = frequency;
-                
-                gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-                
-                oscillator.start();
-                setTimeout(() => {
-                    oscillator.stop();
-                    audioCtx.close();
-                }, duration * 1000);
-            } catch (e) {
-                console.log('Audio not supported');
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            oscillator.type = 'sine';
+            oscillator.frequency.value = frequency;
+            
+            gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            
+            oscillator.start();
+            setTimeout(() => oscillator.stop(), duration * 1000);
+        };
+
+        // Visual feedback
+        const showCombo = () => {
+            const combo = document.createElement('div');
+            combo.className = 'combo-text';
+            combo.style.fontSize = `${Math.min(24 + score * 2, 48)}px`;
+            combo.textContent = `Combo x${score}! 🔥`;
+            combo.style.left = `${Math.random() * 80 + 10}%`;
+            combo.style.top = `${Math.random() * 80 + 10}%`;
+            document.body.appendChild(combo);
+            setTimeout(() => combo.remove(), 1000);
+        };
+
+        const activateCell = (cell, duration = 500) => {
+            cell.style.opacity = '1';
+            cell.classList.add('active');
+            createOscillator(200 + parseInt(cell.dataset.index) * 100, 0.2);
+            
+            setTimeout(() => {
+                cell.style.opacity = '0.5';
+                cell.classList.remove('active');
+            }, duration);
+        };
+
+        const showPattern = async () => {
+            isPlaying = true;
+            startBtn.disabled = true;
+            
+            for (let i = 0; i < pattern.length; i++) {
+                await new Promise(resolve => {
+                    setTimeout(() => {
+                        activateCell(cells[pattern[i]]);
+                        resolve();
+                    }, 800);
+                });
             }
+            
+            isPlaying = false;
+            startBtn.disabled = false;
         };
 
-        const createPopup = (element, text, isSuccess) => {
-            const popup = document.createElement('div');
-            popup.className = 'popup-text';
-            popup.style.color = isSuccess ? 'var(--success)' : 'var(--error)';
-            const rect = element.getBoundingClientRect();
-            popup.style.left = `${rect.left}px`;
-            popup.style.top = `${rect.top}px`;
-            popup.textContent = text;
-            document.body.appendChild(popup);
-            setTimeout(() => popup.remove(), 1000);
-        };
-
-        const generatePattern = () => {
-            patternContainer.innerHTML = '';
-            const patternType = patterns[Math.floor(Math.random() * patterns.length)];
-            currentStep = patternType.step;
+        const checkPattern = (index) => {
+            playerPattern.push(index);
             
-            // Generate random start number within range
-            const [min, max] = patternType.startRange;
-            let start = Math.floor(Math.random() * (max - min + 1)) + min;
-            // Ensure start number aligns with the pattern step
-            start = Math.ceil(start / currentStep) * currentStep;
-            
-            // Generate pattern
-            currentPattern = [];
-            for (let i = 0; i < 4; i++) {
-                currentPattern.push(start);
-                start += currentStep;
-            }
-
-            // Display pattern with last number as input
-            currentPattern.forEach((num, index) => {
-                if (index > 0) {
-                    const arrow = document.createElement('div');
-                    arrow.className = 'arrow';
-                    arrow.textContent = '→';
-                    patternContainer.appendChild(arrow);
-                }
-
-                const box = document.createElement('div');
-                box.className = 'number-box';
+            if (playerPattern[playerPattern.length - 1] !== pattern[playerPattern.length - 1]) {
+                // Wrong pattern
+                container.classList.add('shake');
+                createOscillator(100, 0.3);
+                setTimeout(() => container.classList.remove('shake'), 500);
                 
-                if (index === currentPattern.length - 1) {
-                    const input = document.createElement('input');
-                    input.type = 'number';
-                    input.autocomplete = 'off';
-                    input.placeholder = '?';
-                    box.appendChild(input);
-                } else {
-                    box.classList.add('filled');
-                    box.textContent = num;
-                }
-                
-                patternContainer.appendChild(box);
-            });
-
-            patternTypeElement.textContent = `Counting by ${patternType.name}!`;
-            hintElement.textContent = "What number comes next in the pattern?";
-
-            // Focus on the input
-            const input = document.querySelector('input');
-            if (input) input.focus();
-        };
-
-        const checkAnswer = () => {
-            const input = document.querySelector('input');
-            if (!input.value) return; // Don't check if input is empty
-
-            const answer = parseInt(input.value);
-            const correct = currentPattern[currentPattern.length - 1];
-            const box = input.parentElement;
-            
-            if (answer === correct) {
-                score++;
-                streak++;
+                pattern = [];
+                playerPattern = [];
+                score = 0;
                 scoreElement.textContent = score;
-                streakElement.textContent = streak;
-                box.classList.add('success');
+                startBtn.textContent = 'Try Again';
+                return;
+            }
+            
+            if (playerPattern.length === pattern.length) {
+                // Correct pattern
+                score++;
+                scoreElement.textContent = score;
+                showCombo();
+                createOscillator(440 + score * 50, 0.2);
                 
-                // Different celebrations based on streak
-                let celebration = '🌟 Correct! 🌟';
-                if (streak >= 5) celebration = '🔥 On Fire! 🔥';
-                if (streak >= 10) celebration = '⚡ Unstoppable! ⚡';
-                
-                createPopup(box, celebration, true);
-                createOscillator(440 + streak * 10, 0.3);
-                
-                // Automatically generate new pattern after a brief delay
-                setTimeout(generatePattern, 800);
-            } else {
-                streak = 0;
-                streakElement.textContent = streak;
-                box.classList.add('error');
-                setTimeout(() => box.classList.remove('error'), 500);
-                createOscillator(200, 0.3);
-                createPopup(box, 'Try again!', false);
-                hintElement.textContent = `Hint: You're counting by ${currentStep}s!`;
-                input.value = ''; // Clear wrong answer
-                input.focus(); // Refocus on input
+                pattern.push(Math.floor(Math.random() * 4));
+                playerPattern = [];
+                setTimeout(showPattern, 1000);
             }
         };
 
-        checkBtn.addEventListener('click', checkAnswer);
-        newBtn.addEventListener('click', generatePattern);
-
-        // Input validation and auto-check on Enter
-        document.addEventListener('input', (e) => {
-            if (e.target.tagName === 'INPUT') {
-                const value = parseInt(e.target.value);
-                if (value < 0 || value > 100 || isNaN(value)) {
-                    e.target.value = '';
-                }
-            }
+        cells.forEach(cell => {
+            cell.addEventListener('click', () => {
+                if (isPlaying) return;
+                
+                const index = parseInt(cell.dataset.index);
+                activateCell(cell, 200);
+                checkPattern(index);
+            });
         });
 
-        document.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                checkAnswer();
-            }
+        startBtn.addEventListener('click', () => {
+            pattern = [Math.floor(Math.random() * 4)];
+            playerPattern = [];
+            showPattern();
+            startBtn.textContent = 'Playing...';
         });
-
-        // Start game
-        generatePattern();
     </script>
 </body>
 </html>

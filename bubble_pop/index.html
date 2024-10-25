@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+    <title>Bubble Pop!</title>
+    <style>
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.1s;
+            animation: float 3s infinite ease-in-out;
+            user-select: none;
+            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.2),
+                       inset 5px 5px 15px rgba(255,255,255,0.4);
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+
+        .pop {
+            animation: pop 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); opacity: 1; filter: brightness(1); }
+            50% { transform: scale(1.5); opacity: 0.8; filter: brightness(1.5); }
+            100% { transform: scale(2.5); opacity: 0; filter: brightness(0); }
+        }
+
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            animation: particle 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        @keyframes particle {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+
+        .score-bump {
+            animation: scoreBump 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes scoreBump {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
+        .screen-shake {
+            animation: shake 0.2s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(2px, 2px) rotate(1deg); }
+            50% { transform: translate(-2px, -2px) rotate(-1deg); }
+            75% { transform: translate(-2px, 2px) rotate(1deg); }
+        }
+
+        .level-up {
+            animation: levelUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes levelUp {
+            0% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.5); filter: brightness(1.5); }
+            100% { transform: scale(1); filter: brightness(1); }
+        }
+
+        #combo-text {
+            position: fixed;
+            pointer-events: none;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(255,255,255,0.8);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-b from-blue-400 to-purple-500 min-h-screen overflow-hidden touch-none">
+    <div class="fixed top-0 left-0 right-0 p-4 flex justify-between items-center bg-white bg-opacity-20 backdrop-blur-sm">
+        <div class="text-white text-xl font-bold">Score: <span id="score" class="text-2xl">0</span></div>
+        <div class="text-white text-xl font-bold">Level: <span id="level" class="text-2xl">1</span></div>
+        <div class="text-white text-xl font-bold">Time: <span id="timer" class="text-2xl">30</span>s</div>
+    </div>
+
+    <div id="game-container" class="w-full h-screen"></div>
+
+    <div id="game-over" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg text-center">
+            <h2 class="text-3xl font-bold mb-4">Game Over!</h2>
+            <p class="text-xl mb-4">Final Score: <span id="final-score">0</span></p>
+            <button onclick="startGame()" class="bg-blue-500 text-white px-6 py-3 rounded-lg text-xl hover:bg-blue-600 transition-colors">
+                Play Again
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Create Audio Context and sounds
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        // Sound creation functions
+        function createPopSound(freq = 200) {
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.1);
+        }
+
+        function createLevelUpSound() {
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(400, audioCtx.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.1);
+            
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.3);
+        }
+
+        let score = 0;
+        let level = 1;
+        let timeLeft = 30;
+        let gameInterval;
+        let timerInterval;
+        let isGameActive = false;
+        let combo = 0;
+        let lastPopTime = 0;
+
+        const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEEAD', '#D4A5A5', '#9B5DE5'];
+        const container = document.getElementById('game-container');
+        const scoreElement = document.getElementById('score');
+        const levelElement = document.getElementById('level');
+        const timerElement = document.getElementById('timer');
+        const gameOverScreen = document.getElementById('game-over');
+        const finalScoreElement = document.getElementById('final-score');
+
+        function createParticles(x, y, color) {
+            const particleCount = 8;
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.backgroundColor = color;
+                particle.style.width = '8px';
+                particle.style.height = '8px';
+                particle.style.borderRadius = '50%';
+                particle.style.left = `${x}px`;
+                particle.style.top = `${y}px`;
+                
+                const angle = (i / particleCount) * 2 * Math.PI;
+                const distance = 100;
+                const tx = Math.cos(angle) * distance;
+                const ty = Math.sin(angle) * distance;
+                
+                particle.style.setProperty('--tx', `${tx}px`);
+                particle.style.setProperty('--ty', `${ty}px`);
+                
+                container.appendChild(particle);
+                setTimeout(() => particle.remove(), 600);
+            }
+        }
+
+        function showComboText(x, y, comboCount) {
+            const comboText = document.createElement('div');
+            comboText.id = 'combo-text';
+            comboText.className = 'text-white text-2xl';
+            comboText.style.left = `${x}px`;
+            comboText.style.top = `${y}px`;
+            comboText.textContent = `${comboCount}x Combo!`;
+            
+            container.appendChild(comboText);
+            
+            comboText.animate([
+                { transform: 'translateY(0) scale(1)', opacity: 1 },
+                { transform: 'translateY(-50px) scale(1.5)', opacity: 0 }
+            ], {
+                duration: 800,
+                easing: 'cubic-bezier(0.165, 0.84, 0.44, 1)'
+            }).onfinish = () => comboText.remove();
+        }
+
+        function createBubble() {
+            if (!isGameActive) return;
+
+            const bubble = document.createElement('div');
+            const size = Math.random() * (80 - 40) + 40;
+            const color = colors[Math.floor(Math.random() * colors.length)];
+
+            bubble.className = 'bubble';
+            bubble.style.width = `${size}px`;
+            bubble.style.height = `${size}px`;
+            bubble.style.backgroundColor = color;
+            bubble.style.left = `${Math.random() * (window.innerWidth - size)}px`;
+            bubble.style.top = `${window.innerHeight}px`;
+
+            container.appendChild(bubble);
+
+            const floatDuration = Math.random() * (8 - 4) + 4;
+            bubble.style.transition = `top ${floatDuration}s linear`;
+
+            setTimeout(() => {
+                bubble.style.top = '-100px';
+            }, 100);
+
+            bubble.addEventListener('click', () => {
+                if (!isGameActive) return;
+                
+                const rect = bubble.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+
+                // Check combo timing
+                const now = Date.now();
+                if (now - lastPopTime < 500) {
+                    combo++;
+                    if (combo > 2) {
+                        showComboText(centerX, centerY, combo);
+                    }
+                } else {
+                    combo = 1;
+                }
+                lastPopTime = now;
+
+                // Create pop sound with varying frequency based on size
+                createPopSound(400 + (80 - size) * 4);
+                
+                bubble.classList.add('pop');
+                container.classList.add('screen-shake');
+                
+                // Create particles
+                createParticles(centerX, centerY, bubble.style.backgroundColor);
+
+                // Calculate score with combo multiplier
+                const baseScore = Math.floor(50 / (size / 40));
+                const comboScore = baseScore * (combo > 2 ? combo / 2 : 1);
+                score += Math.floor(comboScore);
+                
+                scoreElement.textContent = score;
+                scoreElement.classList.add('score-bump');
+                
+                setTimeout(() => {
+                    bubble.remove();
+                    scoreElement.classList.remove('score-bump');
+                    container.classList.remove('screen-shake');
+                }, 400);
+
+                if (score >= level * 200) {
+                    level++;
+                    levelElement.textContent = level;
+                    levelElement.classList.add('level-up');
+                    createLevelUpSound();
+                    
+                    // Add level-up effect to background
+                    document.body.classList.add('screen-shake');
+                    setTimeout(() => {
+                        document.body.classList.remove('screen-shake');
+                        levelElement.classList.remove('level-up');
+                    }, 600);
+                }
+            });
+
+            setTimeout(() => {
+                if (bubble && bubble.parentNode) {
+                    bubble.remove();
+                }
+            }, floatDuration * 1000);
+        }
+
+        function updateTimer() {
+            timeLeft--;
+            timerElement.textContent = timeLeft;
+
+            if (timeLeft <= 0) {
+                endGame();
+            }
+        }
+
+        function startGame() {
+            // Request audio context resume on user interaction
+            audioCtx.resume();
+            
+            // Reset game state
+            score = 0;
+            level = 1;
+            timeLeft = 30;
+            isGameActive = true;
+            combo = 0;
+            
+            // Clear existing bubbles
+            container.innerHTML = '';
+            
+            // Update UI
+            scoreElement.textContent = score;
+            levelElement.textContent = level;
+            timerElement.textContent = timeLeft;
+            gameOverScreen.classList.add('hidden');
+
+            // Start game intervals
+            clearInterval(gameInterval);
+            clearInterval(timerInterval);
+            
+            gameInterval = setInterval(() => {
+                const bubblesPerSpawn = Math.min(level, 3);
+                for (let i = 0; i < bubblesPerSpawn; i++) {
+                    createBubble();
+                }
+            }, 1000 - (level * 50));
+
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function endGame() {
+            isGameActive = false;
+            clearInterval(gameInterval);
+            clearInterval(timerInterval);
+            finalScoreElement.textContent = score;
+            gameOverScreen.classList.remove('hidden');
+        }
+
+        // Start the game immediately
+        startGame();
+
+        // Prevent scrolling on mobile
+        document.body.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+        }, { passive: false });
+    </script>
+</body>
+</html>

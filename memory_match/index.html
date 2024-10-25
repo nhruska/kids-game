@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Match!</title>
+    <style>
+        body { 
+            background: #1a1a2e;
+            color: white;
+            font-family: system-ui;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .game {
+            max-width: 400px;
+            width: 100%;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 20px auto;
+        }
+        .card {
+            aspect-ratio: 1;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.5s;
+        }
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            font-weight: bold;
+            user-select: none;
+        }
+        .card-front {
+            background: #3b82f6;
+            transform: rotateY(180deg);
+        }
+        .card-back {
+            background: rgba(255,255,255,0.1);
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+        .matched {
+            animation: pulse 0.5s;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .no-match {
+            animation: shake 0.5s;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="game">
+        <h1>Memory Match</h1>
+        <div class="stats">
+            <div>Moves: <span id="moves">0</span></div>
+            <div>Matches: <span id="matches">0</span>/8</div>
+        </div>
+        <div class="grid" id="grid">
+            <!-- Cards will be generated here -->
+        </div>
+    </div>
+
+    <script>
+        const emojis = ['🎮', '🎲', '🎯', '🎪', '🎨', '🎭', '🎪', '🎱'];
+        const grid = document.getElementById('grid');
+        let moves = 0;
+        let matches = 0;
+        let flipped = [];
+        let canFlip = true;
+
+        function createDeck() {
+            // Double the emojis and shuffle
+            const deck = [...emojis, ...emojis]
+                .sort(() => Math.random() - 0.5);
+
+            grid.innerHTML = '';
+            deck.forEach((emoji, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-front">${emoji}</div>
+                        <div class="card-back">?</div>
+                    </div>
+                `;
+                card.dataset.emoji = emoji;
+                card.addEventListener('click', () => flipCard(card));
+                grid.appendChild(card);
+            });
+        }
+
+        function flipCard(card) {
+            if (!canFlip || card.classList.contains('flipped') || flipped.includes(card)) return;
+
+            card.classList.add('flipped');
+            flipped.push(card);
+
+            if (flipped.length === 2) {
+                moves++;
+                document.getElementById('moves').textContent = moves;
+                canFlip = false;
+
+                // Check for match
+                if (flipped[0].dataset.emoji === flipped[1].dataset.emoji) {
+                    flipped.forEach(card => card.classList.add('matched'));
+                    matches++;
+                    document.getElementById('matches').textContent = matches;
+                    flipped = [];
+                    canFlip = true;
+
+                    if (matches === 8) {
+                        setTimeout(() => {
+                            alert(`You won in ${moves} moves!`);
+                            resetGame();
+                        }, 500);
+                    }
+                } else {
+                    flipped.forEach(card => card.classList.add('no-match'));
+                    setTimeout(() => {
+                        flipped.forEach(card => {
+                            card.classList.remove('flipped', 'no-match');
+                        });
+                        flipped = [];
+                        canFlip = true;
+                    }, 1000);
+                }
+            }
+        }
+
+        function resetGame() {
+            moves = 0;
+            matches = 0;
+            flipped = [];
+            canFlip = true;
+            document.getElementById('moves').textContent = moves;
+            document.getElementById('matches').textContent = matches;
+            createDeck();
+        }
+
+        // Start game
+        createDeck();
+    </script>
+</body>
+</html>
