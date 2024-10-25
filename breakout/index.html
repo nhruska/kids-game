@@ -70,6 +70,8 @@
             border-radius: 20px;
             border: 1px solid rgba(59,130,246,0.3);
             box-shadow: 0 0 20px rgba(59,130,246,0.2);
+            text-wrap: nowrap;
+            font-size: 14px;
         }
         #debug {
             position: fixed;
@@ -174,7 +176,7 @@ function setupBricks() {
         for (let c = 0; c < brickColumnCount; c++) {
             bricks[r][c] = {
                 x: c * brickWidth + brickPadding,
-                y: r * brickHeight + brickPadding + 50,
+                y: r * brickHeight + brickPadding + 100,
                 width: brickWidth - brickPadding * 2,
                 height: brickHeight - brickPadding * 2,
                 color: colors[r],
