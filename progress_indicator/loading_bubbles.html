@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    .loading-container {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 8px;
+      max-width: fit-content;
+      background: #f0f0f0;
+      border-radius: 16px;
+    }
+
+    .bubble {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #666;
+      animation: bubble-bounce 1s infinite ease-in-out;
+    }
+
+    .bubble:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .bubble:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes bubble-bounce {
+      0%, 100% {
+        transform: translateY(0);
+        opacity: 0.5;
+      }
+      50% {
+        transform: translateY(-6px);
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="loading-container">
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+  </div>
+</body>
+</html>

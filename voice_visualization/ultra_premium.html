@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(145deg, #f8fafc, #f1f5f9);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      perspective: 1000px;
+    }
+
+    .voice-stage {
+      position: relative;
+      transform-style: preserve-3d;
+      animation: stage-float 8s ease-in-out infinite;
+    }
+
+    .voice-container {
+      padding: 32px 40px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 30px;
+      box-shadow: 
+        0 8px 16px -4px rgba(0, 0, 0, 0.1),
+        0 4px 8px -4px rgba(0, 0, 0, 0.06),
+        0 0 0 1px rgba(0, 0, 0, 0.05),
+        inset 0 0 40px rgba(99, 102, 241, 0.03);
+      backdrop-filter: blur(16px);
+      transform: translateZ(0);
+      animation: container-breathe 4s ease-in-out infinite;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .voice-visualizer {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      height: 48px;
+      width: 320px;
+    }
+
+    .voice-bar {
+      --base-color: #6366f1;
+      --glow-color: rgba(99, 102, 241, 0.4);
+      flex: 1;
+      height: 100%;
+      background: linear-gradient(180deg, 
+        #8b5cf6 0%,
+        var(--base-color) 50%,
+        #a855f7 100%);
+      border-radius: 12px;
+      transform-origin: 50% 100%;
+      will-change: transform;
+      position: relative;
+      filter: drop-shadow(0 0 6px var(--glow-color));
+    }
+
+    .voice-bar::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, 
+        rgba(255, 255, 255, 0.1),
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0.1)
+      );
+      border-radius: inherit;
+      animation: shine 3s ease-in-out infinite;
+    }
+
+    /* Particle effects */
+    .particles {
+      position: absolute;
+      inset: -100px;
+      pointer-events: none;
+    }
+
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: rgba(99, 102, 241, 0.2);
+      border-radius: 50%;
+      animation: particle-float 4s ease-in-out infinite;
+    }
+
+    /* Generate 15 particles */
+    @for $i from 1 through 15 {
+      .particle:nth-child($i) {
+        left: #{random(100)}%;
+        top: #{random(100)}%;
+        animation-delay: #{random(4000)}ms;
+        animation-duration: #{3000 + random(2000)}ms;
+      }
+    }
+
+    /* Dynamic wave pattern with variable speeds */
+    .voice-bar {
+      animation: voice-wave 1.2s ease-in-out infinite;
+    }
+
+    .voice-bar:nth-child(odd) {
+      animation-duration: 1.3s;
+    }
+
+    .voice-bar:nth-child(3n) {
+      animation-duration: 1.1s;
+    }
+
+    .voice-bar:nth-child(3n+1) {
+      animation-duration: 0.9s;
+    }
+
+    /* Create complex wave pattern */
+    .voice-visualizer .voice-bar:nth-child(1) { animation-delay: -0.5s; }
+    .voice-visualizer .voice-bar:nth-child(2) { animation-delay: -0.7s; }
+    .voice-visualizer .voice-bar:nth-child(3) { animation-delay: -0.9s; }
+    .voice-visualizer .voice-bar:nth-child(4) { animation-delay: -1.1s; }
+    .voice-visualizer .voice-bar:nth-child(5) { animation-delay: -1.3s; }
+    .voice-visualizer .voice-bar:nth-child(6) { animation-delay: -1.1s; }
+    .voice-visualizer .voice-bar:nth-child(7) { animation-delay: -0.9s; }
+    .voice-visualizer .voice-bar:nth-child(8) { animation-delay: -0.7s; }
+    .voice-visualizer .voice-bar:nth-child(9) { animation-delay: -0.5s; }
+    .voice-visualizer .voice-bar:nth-child(10) { animation-delay: -0.3s; }
+    .voice-visualizer .voice-bar:nth-child(11) { animation-delay: -0.5s; }
+    .voice-visualizer .voice-bar:nth-child(12) { animation-delay: -0.7s; }
+
+    @keyframes voice-wave {
+      0%, 100% {
+        transform: scaleY(0.15) translateY(0);
+        filter: brightness(0.8) drop-shadow(0 0 3px var(--glow-color));
+      }
+      50% {
+        transform: scaleY(1) translateY(-2px);
+        filter: brightness(1.2) drop-shadow(0 0 12px var(--glow-color));
+      }
+      75% {
+        transform: scaleY(0.5) translateY(-1px);
+        filter: brightness(1) drop-shadow(0 0 6px var(--glow-color));
+      }
+    }
+
+    @keyframes container-breathe {
+      0%, 100% {
+        transform: translateZ(0) scale(1);
+      }
+      50% {
+        transform: translateZ(20px) scale(1.02);
+      }
+    }
+
+    @keyframes stage-float {
+      0%, 100% {
+        transform: rotateX(5deg) rotateY(-5deg);
+      }
+      50% {
+        transform: rotateX(-5deg) rotateY(5deg);
+      }
+    }
+
+    @keyframes shine {
+      0%, 100% { opacity: 0.5; transform: translateX(-100%); }
+      50% { opacity: 1; transform: translateX(100%); }
+    }
+
+    @keyframes particle-float {
+      0%, 100% {
+        transform: translate(0, 0);
+        opacity: 0;
+      }
+      25%, 75% {
+        opacity: 1;
+      }
+      50% {
+        transform: translate(#{random(20) - 10}px, #{random(20) - 10}px);
+      }
+    }
+
+    /* Premium light effect */
+    .voice-container::before {
+      content: '';
+      position: absolute;
+      inset: -60px;
+      background: radial-gradient(circle at center, 
+        rgba(139, 92, 246, 0.15),
+        rgba(168, 85, 247, 0.1) 40%,
+        transparent 80%);
+      border-radius: 50%;
+      z-index: -1;
+      animation: glow-pulse 4s ease-in-out infinite;
+    }
+
+    @keyframes glow-pulse {
+      0%, 100% { 
+        opacity: 0.6; 
+        transform: scale(0.95) translateZ(-10px); 
+      }
+      50% { 
+        opacity: 1; 
+        transform: scale(1.05) translateZ(0); 
+      }
+    }
+
+    /* Dark mode ultra premium */
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: linear-gradient(145deg, #0f172a, #1e293b);
+      }
+      
+      .voice-container {
+        background: rgba(30, 41, 59, 0.8);
+        box-shadow: 
+          0 8px 16px -4px rgba(0, 0, 0, 0.3),
+          0 4px 8px -4px rgba(0, 0, 0, 0.2),
+          0 0 0 1px rgba(255, 255, 255, 0.05),
+          inset 0 0 40px rgba(139, 92, 246, 0.1);
+      }
+
+      .voice-bar {
+        --base-color: #818cf8;
+        --glow-color: rgba(139, 92, 246, 0.5);
+        background: linear-gradient(180deg, 
+          #c084fc 0%,
+          var(--base-color) 50%,
+          #e879f9 100%);
+      }
+
+      .particle {
+        background: rgba(139, 92, 246, 0.3);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="voice-stage">
+    <div class="particles">
+      <!-- Generated particles -->
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+    </div>
+    <div class="voice-container">
+      <div class="voice-visualizer">
+        <div class="voice-bar"></div>
+        <div class="voice-bar"></div>
+        <div class="voice-bar"></div>
+        <div class="voice-bar"></div>
+        <div class="voice-bar"></div>
+        <div class="voice-bar"></div>
+        <div class="voice-bar"></div>
+        <div class="voice-bar"></div>
+        <div class="voice-bar"></div>
+        <div class="voice-bar"></div>
+        <div class="voice-bar"></div>
+        <div class="voice-bar"></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

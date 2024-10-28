@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background: #fafafa;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .voice-container {
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(8px);
+      border-radius: 16px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .voice-visualizer {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      height: 32px;
+      width: 180px;
+    }
+
+    .voice-bar {
+      width: 3px;
+      height: 100%;
+      background: #6366f1;
+      border-radius: 6px;
+      transform-origin: 50% 50%;
+    }
+
+    /* Create 16 bars with different animations */
+    .voice-visualizer .voice-bar {
+      animation: voice-wave 1s ease-in-out infinite;
+    }
+
+    .voice-visualizer .voice-bar:nth-child(1) { animation-delay: -0.9s; }
+    .voice-visualizer .voice-bar:nth-child(2) { animation-delay: -0.8s; }
+    .voice-visualizer .voice-bar:nth-child(3) { animation-delay: -0.7s; }
+    .voice-visualizer .voice-bar:nth-child(4) { animation-delay: -0.6s; }
+    .voice-visualizer .voice-bar:nth-child(5) { animation-delay: -0.5s; }
+    .voice-visualizer .voice-bar:nth-child(6) { animation-delay: -0.4s; }
+    .voice-visualizer .voice-bar:nth-child(7) { animation-delay: -0.3s; }
+    .voice-visualizer .voice-bar:nth-child(8) { animation-delay: -0.2s; }
+    .voice-visualizer .voice-bar:nth-child(9) { animation-delay: -0.1s; }
+    .voice-visualizer .voice-bar:nth-child(10) { animation-delay: 0s; }
+    .voice-visualizer .voice-bar:nth-child(11) { animation-delay: -0.1s; }
+    .voice-visualizer .voice-bar:nth-child(12) { animation-delay: -0.2s; }
+    .voice-visualizer .voice-bar:nth-child(13) { animation-delay: -0.3s; }
+    .voice-visualizer .voice-bar:nth-child(14) { animation-delay: -0.4s; }
+    .voice-visualizer .voice-bar:nth-child(15) { animation-delay: -0.5s; }
+    .voice-visualizer .voice-bar:nth-child(16) { animation-delay: -0.6s; }
+
+    @keyframes voice-wave {
+      0%, 100% {
+        transform: scaleY(0.2);
+      }
+      50% {
+        transform: scaleY(1);
+      }
+      75% {
+        transform: scaleY(0.5);
+      }
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: #1a1a1a;
+      }
+      
+      .voice-container {
+        background: rgba(30, 30, 30, 0.8);
+      }
+
+      .voice-bar {
+        background: #818cf8;
+      }
+    }
+
+    /* Add smooth transition when starting/stopping */
+    .voice-visualizer.paused .voice-bar {
+      animation-play-state: paused;
+      transform: scaleY(0.1);
+      transition: transform 0.3s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <div class="voice-container">
+    <div class="voice-visualizer">
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+    </div>
+  </div>
+</body>
+</html>

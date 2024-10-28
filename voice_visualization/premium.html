@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .voice-container {
+      padding: 24px 32px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 24px;
+      box-shadow: 
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -2px rgba(0, 0, 0, 0.05),
+        0 0 0 1px rgba(0, 0, 0, 0.05);
+      backdrop-filter: blur(12px);
+      transform: translateZ(0);
+      animation: container-pulse 3s ease-in-out infinite;
+    }
+
+    .voice-visualizer {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      height: 40px;
+      width: 240px;
+    }
+
+    .voice-bar {
+      --base-color: #6366f1;
+      --glow-color: rgba(99, 102, 241, 0.3);
+      flex: 1;
+      height: 100%;
+      background: linear-gradient(180deg, 
+        var(--base-color) 0%,
+        #818cf8 100%);
+      border-radius: 8px;
+      transform-origin: 50% 100%;
+      will-change: transform;
+      filter: drop-shadow(0 0 4px var(--glow-color));
+    }
+
+    /* Create dynamic wave pattern */
+    .voice-bar {
+      animation: voice-wave 1.2s ease-in-out infinite;
+    }
+
+    .voice-bar:nth-child(odd) {
+      animation-duration: 1.1s;
+    }
+
+    .voice-bar:nth-child(3n) {
+      animation-duration: 0.9s;
+    }
+
+    /* Staggered delays for organic feel */
+    .voice-visualizer .voice-bar:nth-child(1) { animation-delay: -0.5s; }
+    .voice-visualizer .voice-bar:nth-child(2) { animation-delay: -0.6s; }
+    .voice-visualizer .voice-bar:nth-child(3) { animation-delay: -0.7s; }
+    .voice-visualizer .voice-bar:nth-child(4) { animation-delay: -0.8s; }
+    .voice-visualizer .voice-bar:nth-child(5) { animation-delay: -0.9s; }
+    .voice-visualizer .voice-bar:nth-child(6) { animation-delay: -1.0s; }
+    .voice-visualizer .voice-bar:nth-child(7) { animation-delay: -0.9s; }
+    .voice-visualizer .voice-bar:nth-child(8) { animation-delay: -0.8s; }
+    .voice-visualizer .voice-bar:nth-child(9) { animation-delay: -0.7s; }
+    .voice-visualizer .voice-bar:nth-child(10) { animation-delay: -0.6s; }
+
+    @keyframes voice-wave {
+      0%, 100% {
+        transform: scaleY(0.15);
+        filter: brightness(0.8) drop-shadow(0 0 2px var(--glow-color));
+      }
+      50% {
+        transform: scaleY(1);
+        filter: brightness(1.1) drop-shadow(0 0 8px var(--glow-color));
+      }
+      75% {
+        transform: scaleY(0.5);
+        filter: brightness(0.9) drop-shadow(0 0 4px var(--glow-color));
+      }
+    }
+
+    @keyframes container-pulse {
+      0%, 100% {
+        transform: translateZ(0) scale(1);
+        box-shadow: 
+          0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -2px rgba(0, 0, 0, 0.05),
+          0 0 0 1px rgba(0, 0, 0, 0.05);
+      }
+      50% {
+        transform: translateZ(0) scale(1.02);
+        box-shadow: 
+          0 8px 12px -2px rgba(0, 0, 0, 0.12),
+          0 4px 8px -4px rgba(0, 0, 0, 0.07),
+          0 0 0 1px rgba(0, 0, 0, 0.05);
+      }
+    }
+
+    /* Ambient background effect */
+    .voice-container::before {
+      content: '';
+      position: absolute;
+      inset: -40px;
+      background: radial-gradient(circle at center, 
+        rgba(99, 102, 241, 0.08),
+        transparent 70%);
+      border-radius: 40px;
+      z-index: -1;
+      opacity: 0;
+      animation: glow-pulse 3s ease-in-out infinite;
+    }
+
+    @keyframes glow-pulse {
+      0%, 100% { opacity: 0.5; transform: scale(0.95); }
+      50% { opacity: 1; transform: scale(1.05); }
+    }
+
+    /* Dark mode enhancements */
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: #0f172a;
+      }
+      
+      .voice-container {
+        background: rgba(30, 41, 59, 0.8);
+        box-shadow: 
+          0 4px 6px -1px rgba(0, 0, 0, 0.2),
+          0 2px 4px -2px rgba(0, 0, 0, 0.1),
+          0 0 0 1px rgba(255, 255, 255, 0.05);
+      }
+
+      .voice-bar {
+        --base-color: #818cf8;
+        --glow-color: rgba(129, 140, 248, 0.4);
+        background: linear-gradient(180deg, 
+          var(--base-color) 0%,
+          #a5b4fc 100%);
+      }
+    }
+
+    /* Smooth state transitions */
+    .voice-visualizer.paused .voice-bar {
+      animation-play-state: paused;
+      transform: scaleY(0.1);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      filter: brightness(0.7) drop-shadow(0 0 2px var(--glow-color));
+    }
+
+    .voice-visualizer.paused ~ .status-text {
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <div class="voice-container">
+    <div class="voice-visualizer">
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+    </div>
+  </div>
+</body>
+</html>

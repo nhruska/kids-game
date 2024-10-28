@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #1a1a2e;
+      color: white;
+      font-family: system-ui;
+      touch-action: none;
+    }
+
+    #gameContainer {
+      width: 320px;
+      padding: 10px;
+      background: #16213e;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .cell {
+      aspect-ratio: 1;
+      background: rgba(255,255,255,0.1);
+      border-radius: 8px;
+      position: relative;
+    }
+
+    .gem {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+      animation: pop 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .gem.selected {
+      transform: scale(0.9);
+      box-shadow: 0 0 20px rgba(255,255,255,0.3);
+    }
+
+    .gem.merging {
+      animation: merge 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    .gem.guaranteed {
+      animation: guaranteed 0.5s ease-out;
+    }
+
+    @keyframes pop {
+      0% { transform: scale(0); }
+      70% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes merge {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes guaranteed {
+      0% { transform: scale(0) rotate(0deg); }
+      50% { transform: scale(1.3) rotate(180deg); }
+      100% { transform: scale(1) rotate(360deg); }
+    }
+
+    .gem.level1 { background: linear-gradient(135deg, #FF416C, #FF4B2B); }
+    .gem.level2 { background: linear-gradient(135deg, #4776E6, #8E54E9); }
+    .gem.level3 { background: linear-gradient(135deg, #00B4DB, #0083B0); }
+    .gem.level4 { background: linear-gradient(135deg, #56CCF2, #2F80ED); }
+    .gem.level5 { background: linear-gradient(135deg, #A8FF78, #78FFD6); }
+    .gem.level6 { background: linear-gradient(135deg, #FFD32C, #FF823C); }
+    .gem.level7 { background: linear-gradient(135deg, #F761A1, #8C1BAB); }
+    .gem.level8 { background: linear-gradient(135deg, #FFD700, #FF6B6B); filter: brightness(1.2); }
+
+    .score {
+      font-size: 24px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      margin: 10px;
+      padding: 0 10px;
+    }
+
+    .stats {
+      color: #4facfe;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .merge-count {
+      color: #A8FF78;
+    }
+
+    .next-bonus {
+      color: #FFD700;
+      font-size: 18px;
+      text-align: center;
+      margin: 5px 0;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .points {
+      position: absolute;
+      color: white;
+      font-weight: bold;
+      pointer-events: none;
+      animation: float-up 0.8s ease-out forwards;
+      z-index: 10;
+    }
+
+    @keyframes float-up {
+      0% { transform: translate(-50%, 0); opacity: 1; }
+      100% { transform: translate(-50%, -50px) scale(1.5); opacity: 0; }
+    }
+
+    .message {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.9);
+      padding: 20px;
+      border-radius: 10px;
+      display: none;
+      text-align: center;
+      z-index: 100;
+    }
+
+    button {
+      background: #4facfe;
+      border: none;
+      color: white;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 25px;
+      margin-top: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(79,172,254,0.4);
+    }
+  </style>
+</head>
+<body>
+  <div class="score">
+    <div class="stats">Score: <span id="scoreDisplay">0</span></div>
+    <div class="merge-count">Merges: <span id="mergeCount">0</span></div>
+  </div>
+  <div class="next-bonus">Next bonus in: <span id="nextBonus">5</span></div>
+  <div id="gameContainer">
+    <div id="grid" class="grid"></div>
+  </div>
+  <div id="message" class="message">
+    <h2>Game Over!</h2>
+    <p>Final Score: <span id="finalScore">0</span></p>
+    <button onclick="startGame()">Play Again</button>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>

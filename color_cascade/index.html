@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #1a1a2e;
+      color: white;
+      font-family: system-ui;
+      touch-action: none;
+    }
+
+    #gameContainer {
+      width: 320px;
+      background: #16213e;
+      border-radius: 12px;
+      padding: 10px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+      font-size: 20px;
+      color: #4facfe;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 4px;
+      padding: 4px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 8px;
+    }
+
+    .cell {
+      aspect-ratio: 1;
+      border-radius: 4px;
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .cell:active {
+      transform: scale(0.9);
+    }
+
+    .cell.selected {
+      transform: scale(0.9);
+      box-shadow: 0 0 10px white;
+    }
+
+    .cell.popping {
+      animation: pop 0.3s ease-out;
+    }
+
+    @keyframes pop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); opacity: 0.8; }
+      100% { transform: scale(0); opacity: 0; }
+    }
+
+    .cell.dropping {
+      transition: top 0.3s ease-in;
+    }
+
+    .points {
+      position: absolute;
+      color: white;
+      font-weight: bold;
+      pointer-events: none;
+      animation: float 0.8s ease-out forwards;
+      z-index: 10;
+    }
+
+    @keyframes float {
+      0% { transform: translate(-50%, 0); opacity: 1; }
+      100% { transform: translate(-50%, -50px); opacity: 0; }
+    }
+
+    .moves {
+      font-size: 24px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    button {
+      background: #4facfe;
+      border: none;
+      color: white;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 25px;
+      margin: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(79,172,254,0.4);
+    }
+
+    .game-over {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.9);
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="gameContainer">
+    <div class="stats">
+      <div>Score: <span id="score">0</span></div>
+      <div>Moves: <span id="moves">30</span></div>
+    </div>
+    <div id="grid" class="grid"></div>
+    <div id="gameOver" class="game-over">
+      <h2>Game Over!</h2>
+      <p>Final Score: <span id="finalScore">0</span></p>
+      <button onclick="startGame()">Play Again</button>
+    </div>
+  </div>
+
+  <script>
+    const colors = [
+      '#FF4B2B', // Red
+      '#4776E6', // Blue
+      '#A8FF78', // Green
+      '#FFD32C', // Yellow
+      '#FF61D2', // Pink
+    ];
+
+    const gameState = {
+      score: 0,
+      moves: 30,
+      grid: [],
+      size: { rows: 8, cols: 6 },
+      selectedCell: null
+    };
+
+    function createGrid() {
+      const grid = document.getElementById('grid');
+      grid.style.gridTemplateRows = `repeat(${gameState.size.rows}, 1fr)`;
+      grid.innerHTML = '';
+      gameState.grid = [];
+
+      for (let row = 0; row < gameState.size.rows; row++) {
+        gameState.grid[row] = [];
+        for (let col = 0; col < gameState.size.cols; col++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.dataset.row = row;
+          cell.dataset.col = col;
+          const colorIndex = Math.floor(Math.random() * colors.length);
+          cell.style.backgroundColor = colors[colorIndex];
+          cell.addEventListener('click', () => handleCellClick(row, col));
+          grid.appendChild(cell);
+          gameState.grid[row][col] = colorIndex;
+        }
+      }
+    }
+
+    function handleCellClick(row, col) {
+      if (gameState.moves <= 0) return;
+      
+      const matches = findMatches(row, col);
+      if (matches.length >= 3) {
+        removeMatches(matches);
+        gameState.moves--;
+        document.getElementById('moves').textContent = gameState.moves;
+        
+        if (gameState.moves <= 0) {
+          setTimeout(endGame, 1000);
+        }
+      }
+    }
+
+    function findMatches(row, col) {
+      const color = gameState.grid[row][col];
+      const matches = new Set();
+      const toCheck = [[row, col]];
+      
+      while (toCheck.length > 0) {
+        const [r, c] = toCheck.pop();
+        const key = `${r},${c}`;
+        
+        if (matches.has(key)) continue;
+        matches.add(key);
+        
+        // Check adjacent cells
+        const adjacent = [
+          [r-1, c], [r+1, c],
+          [r, c-1], [r, c+1]
+        ];
+        
+        for (const [newR, newC] of adjacent) {
+          if (newR >= 0 && newR < gameState.size.rows &&
+              newC >= 0 && newC < gameState.size.cols &&
+              gameState.grid[newR][newC] === color) {
+            toCheck.push([newR, newC]);
+          }
+        }
+      }
+      
+      return Array.from(matches).map(key => key.split(',').map(Number));
+    }
+
+    function removeMatches(matches) {
+      const points = matches.length * matches.length * 10;
+      gameState.score += points;
+      document.getElementById('score').textContent = gameState.score;
+      
+      // Show points
+      const firstMatch = matches[0];
+      const cell = document.querySelector(`[data-row="${firstMatch[0]}"][data-col="${firstMatch[1]}"]`);
+      const rect = cell.getBoundingClientRect();
+      
+      const pointsElem = document.createElement('div');
+      pointsElem.className = 'points';
+      pointsElem.textContent = `+${points}`;
+      pointsElem.style.left = `${rect.left + rect.width/2}px`;
+      pointsElem.style.top = `${rect.top}px`;
+      document.body.appendChild(pointsElem);
+      setTimeout(() => pointsElem.remove(), 800);
+      
+      // Remove matches with animation
+      matches.forEach(([row, col]) => {
+        const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+        cell.classList.add('popping');
+        gameState.grid[row][col] = -1;
+      });
+      
+      setTimeout(() => {
+        dropTiles();
+        fillGrid();
+      }, 300);
+    }
+
+    function dropTiles() {
+      for (let col = 0; col < gameState.size.cols; col++) {
+        let writeRow = gameState.size.rows - 1;
+        for (let row = gameState.size.rows - 1; row >= 0; row--) {
+          if (gameState.grid[row][col] !== -1) {
+            if (writeRow !== row) {
+              gameState.grid[writeRow][col] = gameState.grid[row][col];
+              gameState.grid[row][col] = -1;
+              
+              const fromCell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+              const toCell = document.querySelector(`[data-row="${writeRow}"][data-col="${col}"]`);
+              toCell.style.backgroundColor = fromCell.style.backgroundColor;
+              fromCell.style.backgroundColor = 'transparent';
+            }
+            writeRow--;
+          }
+        }
+      }
+    }
+
+    function fillGrid() {
+      for (let row = 0; row < gameState.size.rows; row++) {
+        for (let col = 0; col < gameState.size.cols; col++) {
+          if (gameState.grid[row][col] === -1) {
+            const colorIndex = Math.floor(Math.random() * colors.length);
+            gameState.grid[row][col] = colorIndex;
+            const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            cell.style.backgroundColor = colors[colorIndex];
+          }
+        }
+      }
+      
+      // Check for possible moves
+      if (!hasPossibleMoves()) {
+        shuffleGrid();
+      }
+    }
+
+    function hasPossibleMoves() {
+      for (let row = 0; row < gameState.size.rows; row++) {
+        for (let col = 0; col < gameState.size.cols; col++) {
+          if (findMatches(row, col).length >= 3) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    function shuffleGrid() {
+      const allColors = gameState.grid.flat();
+      for (let row = gameState.size.rows - 1; row > 0; row--) {
+        for (let col = gameState.size.cols - 1; col > 0; col--) {
+          const r = Math.floor(Math.random() * (row + 1));
+          const c = Math.floor(Math.random() * (col + 1));
+          
+          // Swap colors
+          [gameState.grid[row][col], gameState.grid[r][c]] = 
+          [gameState.grid[r][c], gameState.grid[row][col]];
+          
+          // Update visuals
+          const cell1 = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+          const cell2 = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+          const tempColor = cell1.style.backgroundColor;
+          cell1.style.backgroundColor = cell2.style.backgroundColor;
+          cell2.style.backgroundColor = tempColor;
+        }
+      }
+    }
+
+    function startGame() {
+      gameState.score = 0;
+      gameState.moves = 30;
+      document.getElementById('score').textContent = '0';
+      document.getElementById('moves').textContent = '30';
+      document.getElementById('gameOver').style.display = 'none';
+      createGrid();
+    }
+
+    function endGame() {
+      document.getElementById('finalScore').textContent = gameState.score;
+      document.getElementById('gameOver').style.display = 'block';
+    }
+
+    // Start game
+    startGame();
+  </script>
+</body>
+</html>
