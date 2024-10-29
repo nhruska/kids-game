@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Synth Controller</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: #f0f0f0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .header {
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+
+        @media (min-width: 640px) {
+            .controls-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .label {
+            font-size: 14px;
+            color: #666;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        select, button {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+        }
+
+        select:focus, button:focus {
+            outline: none;
+            border-color: #666;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            background: #ddd;
+            border-radius: 3px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #666;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        button {
+            margin-top: 24px;
+            padding: 12px;
+            background: #333;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #444;
+        }
+
+        button:active {
+            background: #222;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎹 Synth Controller</h1>
+        </div>
+        
+        <div class="controls-grid">
+            <div class="control-group">
+                <label class="label">
+                    <span>Waveform</span>
+                    <span id="waveformValue">sine</span>
+                </label>
+                <select id="waveform">
+                    <option value="sine">Sine</option>
+                    <option value="square">Square</option>
+                    <option value="sawtooth">Sawtooth</option>
+                    <option value="triangle">Triangle</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label class="label">
+                    <span>Frequency</span>
+                    <span id="frequencyValue">440 Hz</span>
+                </label>
+                <input type="range" id="frequency" min="20" max="2000" step="1" value="440">
+            </div>
+
+            <div class="control-group">
+                <label class="label">
+                    <span>Filter Frequency</span>
+                    <span id="filterFreqValue">1000 Hz</span>
+                </label>
+                <input type="range" id="filterFreq" min="20" max="20000" step="1" value="1000">
+            </div>
+
+            <div class="control-group">
+                <label class="label">
+                    <span>Filter Q</span>
+                    <span id="filterQValue">1.0</span>
+                </label>
+                <input type="range" id="filterQ" min="0.1" max="10" step="0.1" value="1">
+            </div>
+
+            <div class="control-group">
+                <label class="label">
+                    <span>Reverb Mix</span>
+                    <span id="reverbValue">30%</span>
+                </label>
+                <input type="range" id="reverb" min="0" max="1" step="0.01" value="0.3">
+            </div>
+
+            <div class="control-group">
+                <label class="label">
+                    <span>Gain</span>
+                    <span id="gainValue">50%</span>
+                </label>
+                <input type="range" id="gain" min="0" max="1" step="0.01" value="0.5">
+            </div>
+        </div>
+
+        <button id="playButton">Play</button>
+    </div>
+
+    <script>
+        let audioContext = null;
+        let oscillator = null;
+        let gainNode = null;
+        let filterNode = null;
+        let reverbNode = null;
+        let dryGainNode = null;
+        let wetGainNode = null;
+        let isPlaying = false;
+
+        // Initialize audio context on first user interaction
+        document.addEventListener('click', initAudioContext, { once: true });
+
+        function initAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        async function createReverb() {
+            const convolver = audioContext.createConvolver();
+            const length = audioContext.sampleRate * 2;
+            const impulse = audioContext.createBuffer(2, length, audioContext.sampleRate);
+            
+            for (let channel = 0; channel < 2; channel++) {
+                const channelData = impulse.getChannelData(channel);
+                for (let i = 0; i < length; i++) {
+                    channelData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (length / 3));
+                }
+            }
+            
+            convolver.buffer = impulse;
+            return convolver;
+        }
+
+        async function setupAudio() {
+            oscillator = audioContext.createOscillator();
+            gainNode = audioContext.createGain();
+            filterNode = audioContext.createBiquadFilter();
+            reverbNode = await createReverb();
+            dryGainNode = audioContext.createGain();
+            wetGainNode = audioContext.createGain();
+
+            // Set initial values
+            oscillator.type = document.getElementById('waveform').value;
+            oscillator.frequency.value = parseFloat(document.getElementById('frequency').value);
+            gainNode.gain.value = parseFloat(document.getElementById('gain').value);
+            filterNode.type = 'lowpass';
+            filterNode.frequency.value = parseFloat(document.getElementById('filterFreq').value);
+            filterNode.Q.value = parseFloat(document.getElementById('filterQ').value);
+
+            const reverbMix = parseFloat(document.getElementById('reverb').value);
+            dryGainNode.gain.value = 1 - reverbMix;
+            wetGainNode.gain.value = reverbMix;
+
+            // Connect nodes
+            oscillator.connect(filterNode);
+            filterNode.connect(dryGainNode);
+            filterNode.connect(reverbNode);
+            reverbNode.connect(wetGainNode);
+            dryGainNode.connect(gainNode);
+            wetGainNode.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+        }
+
+        async function toggleSound() {
+            if (!isPlaying) {
+                await setupAudio();
+                oscillator.start();
+                isPlaying = true;
+                document.getElementById('playButton').textContent = 'Stop';
+            } else {
+                oscillator.stop();
+                isPlaying = false;
+                document.getElementById('playButton').textContent = 'Play';
+            }
+        }
+
+        // Update display values and audio parameters
+        function updateValue(id, value, unit = '') {
+            document.getElementById(id + 'Value').textContent = value + unit;
+            
+            if (!isPlaying) return;
+
+            switch (id) {
+                case 'waveform':
+                    oscillator.type = value;
+                    break;
+                case 'frequency':
+                    oscillator.frequency.setValueAtTime(value, audioContext.currentTime);
+                    break;
+                case 'gain':
+                    gainNode.gain.setValueAtTime(value, audioContext.currentTime);
+                    break;
+                case 'filterFreq':
+                    filterNode.frequency.setValueAtTime(value, audioContext.currentTime);
+                    break;
+                case 'filterQ':
+                    filterNode.Q.setValueAtTime(value, audioContext.currentTime);
+                    break;
+                case 'reverb':
+                    dryGainNode.gain.setValueAtTime(1 - value, audioContext.currentTime);
+                    wetGainNode.gain.setValueAtTime(value, audioContext.currentTime);
+                    break;
+            }
+        }
+
+        // Set up event listeners
+        document.getElementById('waveform').addEventListener('change', e => {
+            updateValue('waveform', e.target.value);
+        });
+
+        document.getElementById('frequency').addEventListener('input', e => {
+            updateValue('frequency', e.target.value, ' Hz');
+        });
+
+        document.getElementById('gain').addEventListener('input', e => {
+            updateValue('gain', Math.round(e.target.value * 100), '%');
+        });
+
+        document.getElementById('filterFreq').addEventListener('input', e => {
+            updateValue('filterFreq', e.target.value, ' Hz');
+        });
+
+        document.getElementById('filterQ').addEventListener('input', e => {
+            updateValue('filterQ', parseFloat(e.target.value).toFixed(1));
+        });
+
+        document.getElementById('reverb').addEventListener('input', e => {
+            updateValue('reverb', Math.round(e.target.value * 100), '%');
+        });
+
+        document.getElementById('playButton').addEventListener('click', toggleSound);
+    </script>
+</body>
+</html>

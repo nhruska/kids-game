@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>4-Piece Band Simulator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: #1a1a1a;
+            color: #fff;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .track {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .track-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 120px;
+        }
+
+        label {
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        select {
+            background: #333;
+            color: white;
+            border: 1px solid #444;
+            padding: 8px;
+            border-radius: 4px;
+            width: 100%;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        button.active {
+            background: #f44336;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .step {
+            aspect-ratio: 1;
+            background: #333;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .step.active {
+            background: #4CAF50;
+        }
+
+        .step.playing {
+            border: 2px solid white;
+        }
+
+        input[type="range"] {
+            width: 100%;
+        }
+
+        .value-display {
+            font-size: 12px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Transport -->
+        <div class="track">
+            <div class="track-header">
+                <h1>🎸 4-Piece Band Simulator</h1>
+            </div>
+            <div class="controls">
+                <button id="playButton">▶️ Play</button>
+                <div class="control-group">
+                    <label>Tempo</label>
+                    <input type="range" id="tempo" min="60" max="180" value="120">
+                    <div class="value-display"><span id="tempoValue">120</span> BPM</div>
+                </div>
+                <div class="control-group">
+                    <label>Key</label>
+                    <select id="key">
+                        <option value="C">C</option>
+                        <option value="G">G</option>
+                        <option value="D">D</option>
+                        <option value="A">A</option>
+                        <option value="E">E</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Style</label>
+                    <select id="style">
+                        <option value="rock">Rock</option>
+                        <option value="blues">Blues</option>
+                        <option value="funk">Funk</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Drums -->
+        <div class="track">
+            <div class="track-header">
+                <h2>🥁 Drums</h2>
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Pattern</label>
+                        <select id="drumPattern">
+                            <option value="basic">Basic Rock</option>
+                            <option value="shuffle">Blues Shuffle</option>
+                            <option value="funk">Funk</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>Volume (<span id="drumVolumeValue">80</span>%)</label>
+                        <input type="range" id="drumVolume" min="0" max="100" value="80">
+                    </div>
+                </div>
+            </div>
+            <div id="drumGrid" class="grid"></div>
+        </div>
+
+        <!-- Bass -->
+        <div class="track">
+            <div class="track-header">
+                <h2>🎸 Bass</h2>
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Pattern</label>
+                        <select id="bassPattern">
+                            <option value="root">Root Notes</option>
+                            <option value="walking">Walking Bass</option>
+                            <option value="groove">Groove</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>Tone</label>
+                        <select id="bassTone">
+                            <option value="finger">Finger</option>
+                            <option value="pick">Pick</option>
+                            <option value="synth">Synth</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>Volume (<span id="bassVolumeValue">70</span>%)</label>
+                        <input type="range" id="bassVolume" min="0" max="100" value="70">
+                    </div>
+                </div>
+            </div>
+            <div id="bassGrid" class="grid"></div>
+        </div>
+
+        <!-- Guitar -->
+        <div class="track">
+            <div class="track-header">
+                <h2>🎸 Rhythm Guitar</h2>
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Style</label>
+                        <select id="guitarStyle">
+                            <option value="strum">Strumming</option>
+                            <option value="power">Power Chords</option>
+                            <option value="arpeggio">Arpeggio</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>Tone</label>
+                        <select id="guitarTone">
+                            <option value="clean">Clean</option>
+                            <option value="crunch">Crunch</option>
+                            <option value="distortion">Distortion</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>Volume (<span id="guitarVolumeValue">60</span>%)</label>
+                        <input type="range" id="guitarVolume" min="0" max="100" value="60">
+                    </div>
+                </div>
+            </div>
+            <div id="guitarGrid" class="grid"></div>
+        </div>
+
+        <!-- Lead -->
+        <div class="track">
+            <div class="track-header">
+                <h2>🎸 Lead</h2>
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Style</label>
+                        <select id="leadStyle">
+                            <option value="melody">Melody</option>
+                            <option value="solo">Solo</option>
+                            <option value="riff">Riff</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>Tone</label>
+                        <select id="leadTone">
+                            <option value="clean">Clean</option>
+                            <option value="overdrive">Overdrive</option>
+                            <option value="lead">Lead</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>Volume (<span id="leadVolumeValue">65</span>%)</label>
+                        <input type="range" id="leadVolume" min="0" max="100" value="65">
+                    </div>
+                </div>
+            </div>
+            <div id="leadGrid" class="grid"></div>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>

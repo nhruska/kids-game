@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Drum Pad</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #111;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            color: white;
+            touch-action: none;
+        }
+
+        .info {
+            margin-bottom: 20px;
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        .drum-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.5);
+        }
+
+        .pad {
+            width: 100px;
+            height: 100px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(145deg, #1a1a1a, #222);
+            box-shadow: 5px 5px 10px #0a0a0a,
+                       -5px -5px 10px #262626;
+            cursor: pointer;
+            transition: all 0.1s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            user-select: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pad:active, .pad.active {
+            transform: scale(0.95);
+            box-shadow: 2px 2px 5px #0a0a0a,
+                       -2px -2px 5px #262626;
+            color: #fff;
+        }
+
+        .pad span {
+            font-size: 12px;
+            margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            pointer-events: none;
+        }
+
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        .pad-icon {
+            font-size: 24px;
+            opacity: 0.8;
+        }
+
+        .key-hint {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 12px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 400px) {
+            .pad {
+                width: 80px;
+                height: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="info">Use keyboard (1-9) or tap/click</div>
+    <div class="drum-grid"></div>
+
+    <script>
+        class DrumPad {
+            constructor() {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                this.setupDrumPads();
+                this.setupKeyboardEvents();
+                this.compressor = this.createCompressor();
+                this.loadSounds();
+            }
+
+            pads = [
+                { name: 'Kick', key: '1', icon: '🥁', color: '#ff4444', frequency: 50 },
+                { name: 'Snare', key: '2', icon: '🔄', color: '#44ff44', frequency: 200 },
+                { name: 'HiHat', key: '3', icon: '💫', color: '#4444ff', frequency: 1000 },
+                { name: 'Clap', key: '4', icon: '👏', color: '#ff44ff', frequency: 400 },
+                { name: 'Rim', key: '5', icon: '💥', color: '#ffff44', frequency: 300 },
+                { name: 'Tom', key: '6', icon: '🌀', color: '#44ffff', frequency: 150 },
+                { name: 'Crash', key: '7', icon: '⚡', color: '#ff8844', frequency: 800 },
+                { name: 'Perc', key: '8', icon: '✨', color: '#88ff44', frequency: 600 },
+                { name: 'FX', key: '9', icon: '🌟', color: '#4488ff', frequency: 700 }
+            ];
+
+            createCompressor() {
+                const compressor = this.audioContext.createDynamicsCompressor();
+                compressor.threshold.value = -24;
+                compressor.knee.value = 30;
+                compressor.ratio.value = 12;
+                compressor.attack.value = 0.003;
+                compressor.release.value = 0.25;
+                compressor.connect(this.audioContext.destination);
+                return compressor;
+            }
+
+            setupDrumPads() {
+                const grid = document.querySelector('.drum-grid');
+                this.pads.forEach(pad => {
+                    const button = document.createElement('div');
+                    button.className = 'pad';
+                    button.innerHTML = `
+                        <div class="pad-icon">${pad.icon}</div>
+                        <span>${pad.name}</span>
+                        <div class="key-hint">${pad.key}</div>
+                    `;
+                    button.addEventListener('mousedown', () => this.playSound(pad));
+                    button.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        this.playSound(pad);
+                    });
+                    button.addEventListener('mouseup', () => this.padRelease(button));
+                    button.addEventListener('touchend', () => this.padRelease(button));
+                    button.addEventListener('mouseleave', () => this.padRelease(button));
+                    pad.element = button;
+                    grid.appendChild(button);
+                });
+            }
+
+            setupKeyboardEvents() {
+                document.addEventListener('keydown', (e) => {
+                    if (e.repeat) return;
+                    const pad = this.pads.find(p => p.key === e.key);
+                    if (pad) {
+                        this.playSound(pad);
+                    }
+                });
+
+                document.addEventListener('keyup', (e) => {
+                    const pad = this.pads.find(p => p.key === e.key);
+                    if (pad) {
+                        this.padRelease(pad.element);
+                    }
+                });
+            }
+
+            createRipple(element, x, y) {
+                const ripple = document.createElement('div');
+                ripple.className = 'ripple';
+                
+                const rect = element.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                ripple.style.width = ripple.style.height = `${size}px`;
+                
+                ripple.style.left = `${x - rect.left - size/2}px`;
+                ripple.style.top = `${y - rect.top - size/2}px`;
+                
+                element.appendChild(ripple);
+                ripple.addEventListener('animationend', () => ripple.remove());
+            }
+
+            async loadSounds() {
+                const buffers = {};
+                const loadSound = async (name, frequency) => {
+                    const length = 1;
+                    const sampleRate = this.audioContext.sampleRate;
+                    const buffer = this.audioContext.createBuffer(1, sampleRate * length, sampleRate);
+                    const data = buffer.getChannelData(0);
+
+                    for (let i = 0; i < buffer.length; i++) {
+                        const t = i / sampleRate;
+                        switch(name) {
+                            case 'Kick':
+                                data[i] = Math.sin(2 * Math.PI * (frequency * Math.exp(-20 * t))) * Math.exp(-5 * t);
+                                break;
+                            case 'Snare':
+                                data[i] = (Math.random() * 2 - 1) * Math.exp(-10 * t) + 
+                                         Math.sin(2 * Math.PI * frequency * t) * Math.exp(-5 * t);
+                                break;
+                            case 'HiHat':
+                                data[i] = (Math.random() * 2 - 1) * Math.exp(-50 * t);
+                                break;
+                            case 'Clap':
+                                data[i] = (Math.random() * 2 - 1) * Math.exp(-20 * t) * 
+                                         (t > 0.1 ? 0.5 : 1);
+                                break;
+                            default:
+                                data[i] = Math.sin(2 * Math.PI * frequency * t) * Math.exp(-8 * t) +
+                                         (Math.random() * 2 - 1) * Math.exp(-20 * t) * 0.3;
+                        }
+                    }
+                    return buffer;
+                };
+
+                for (const pad of this.pads) {
+                    buffers[pad.name] = await loadSound(pad.name, pad.frequency);
+                }
+                this.buffers = buffers;
+            }
+
+            playSound(pad) {
+                if (!this.buffers) return;
+
+                const source = this.audioContext.createBufferSource();
+                source.buffer = this.buffers[pad.name];
+                
+                const gainNode = this.audioContext.createGain();
+                gainNode.connect(this.compressor);
+                source.connect(gainNode);
+                
+                source.start();
+                pad.element.classList.add('active');
+
+                // Create ripple effect at center of pad
+                const rect = pad.element.getBoundingClientRect();
+                this.createRipple(
+                    pad.element,
+                    rect.left + rect.width/2,
+                    rect.top + rect.height/2
+                );
+            }
+
+            padRelease(element) {
+                element.classList.remove('active');
+            }
+        }
+
+        window.onload = () => new DrumPad();
+    </script>
+</body>
+</html>

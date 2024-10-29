@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: #1a1a1a;
+            color: #fff;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #2a2a2a;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .transport {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .track {
+            background: #2a2a2a;
+            margin-bottom: 10px;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .track-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .sequence-grid {
+            display: grid;
+            grid-template-columns: repeat(16, 1fr);
+            gap: 4px;
+            margin-bottom: 10px;
+        }
+
+        .step {
+            aspect-ratio: 1;
+            background: #3a3a3a;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .step.active {
+            background: #4CAF50;
+        }
+
+        .step.current {
+            border: 2px solid #fff;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        label {
+            font-size: 12px;
+            color: #999;
+        }
+
+        input[type="range"] {
+            width: 100px;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        .piano-roll {
+            height: 200px;
+            background: #3a3a3a;
+            margin-top: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .note {
+            position: absolute;
+            background: #4CAF50;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        select {
+            background: #3a3a3a;
+            color: white;
+            border: 1px solid #4a4a4a;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="transport">
+                <button id="playButton">Play</button>
+                <span id="bpmDisplay">120 BPM</span>
+                <input type="range" id="bpmControl" min="60" max="180" value="120">
+            </div>
+            <div class="controls">
+                <button id="clearAll">Clear All</button>
+            </div>
+        </div>
+
+        <!-- Drum Tracks -->
+        <div class="track" id="kickTrack">
+            <div class="track-header">
+                <h3>Kick</h3>
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Volume</label>
+                        <input type="range" class="volume" min="0" max="1" step="0.1" value="0.8">
+                    </div>
+                </div>
+            </div>
+            <div class="sequence-grid" data-instrument="kick"></div>
+        </div>
+
+        <div class="track" id="snareTrack">
+            <div class="track-header">
+                <h3>Snare</h3>
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Volume</label>
+                        <input type="range" class="volume" min="0" max="1" step="0.1" value="0.7">
+                    </div>
+                </div>
+            </div>
+            <div class="sequence-grid" data-instrument="snare"></div>
+        </div>
+
+        <div class="track" id="hihatTrack">
+            <div class="track-header">
+                <h3>Hi-Hat</h3>
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Volume</label>
+                        <input type="range" class="volume" min="0" max="1" step="0.1" value="0.6">
+                    </div>
+                </div>
+            </div>
+            <div class="sequence-grid" data-instrument="hihat"></div>
+        </div>
+
+        <!-- Bass Track -->
+        <div class="track" id="bassTrack">
+            <div class="track-header">
+                <h3>Bass</h3>
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Volume</label>
+                        <input type="range" class="volume" min="0" max="1" step="0.1" value="0.7">
+                    </div>
+                    <div class="control-group">
+                        <label>Waveform</label>
+                        <select class="waveform">
+                            <option value="sine">Sine</option>
+                            <option value="square">Square</option>
+                            <option value="sawtooth" selected>Sawtooth</option>
+                            <option value="triangle">Triangle</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="sequence-grid" data-instrument="bass"></div>
+        </div>
+
+        <!-- Lead Synth Track -->
+        <div class="track" id="leadTrack">
+            <div class="track-header">
+                <h3>Lead Synth</h3>
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Volume</label>
+                        <input type="range" class="volume" min="0" max="1" step="0.1" value="0.6">
+                    </div>
+                    <div class="control-group">
+                        <label>Waveform</label>
+                        <select class="waveform">
+                            <option value="sine">Sine</option>
+                            <option value="square" selected>Square</option>
+                            <option value="sawtooth">Sawtooth</option>
+                            <option value="triangle">Triangle</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="sequence-grid" data-instrument="lead"></div>
+        </div>
+    </div>
+
+    <script>
+        let audioContext = null;
+        let isPlaying = false;
+        let currentStep = 0;
+        let stepInterval = null;
+
+        // Sequence data
+        const sequence = {
+            kick: Array(16).fill(false),
+            snare: Array(16).fill(false),
+            hihat: Array(16).fill(false),
+            bass: Array(16).fill(false),
+            lead: Array(16).fill(false)
+        };
+
+        // Notes for melodic instruments
+        const bassNotes = [36, 36, 36, 36, 41, 41, 43, 43, 36, 36, 36, 36, 41, 41, 43, 43]; // C2, F2, G2
+        const leadNotes = [60, 62, 64, 65, 67, 69, 71, 72, 60, 62, 64, 65, 67, 69, 71, 72]; // C4 major scale
+
+        // Initialize audio context on first user interaction
+        document.addEventListener('click', initAudioContext, { once: true });
+
+        function initAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                setupTracks();
+            }
+        }
+
+        // Create sequence grids
+        function setupTracks() {
+            Object.keys(sequence).forEach(instrument => {
+                const grid = document.querySelector(`[data-instrument="${instrument}"]`);
+                for (let i = 0; i < 16; i++) {
+                    const step = document.createElement('button');
+                    step.className = 'step';
+                    step.addEventListener('click', () => toggleStep(instrument, i));
+                    grid.appendChild(step);
+                }
+            });
+
+            // Set up some default patterns
+            sequence.kick[0] = sequence.kick[8] = true;
+            sequence.snare[4] = sequence.snare[12] = true;
+            sequence.hihat[0] = sequence.hihat[4] = sequence.hihat[8] = sequence.hihat[12] = true;
+            updateGridDisplay();
+        }
+
+        function toggleStep(instrument, step) {
+            sequence[instrument][step] = !sequence[instrument][step];
+            updateGridDisplay();
+        }
+
+        function updateGridDisplay() {
+            Object.keys(sequence).forEach(instrument => {
+                const steps = document.querySelector(`[data-instrument="${instrument}"]`).children;
+                sequence[instrument].forEach((on, i) => {
+                    steps[i].className = `step${on ? ' active' : ''}${i === currentStep ? ' current' : ''}`;
+                });
+            });
+        }
+
+        // Sound generators
+        async function playDrum(type) {
+            const duration = 0.1;
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            const volume = document.querySelector(`#${type}Track .volume`).value;
+
+            gain.gain.value = volume;
+
+            switch (type) {
+                case 'kick':
+                    osc.frequency.setValueAtTime(150, audioContext.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                    break;
+                case 'snare':
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(100, audioContext.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                    break;
+                case 'hihat':
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(2000, audioContext.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
+                    break;
+            }
+
+            osc.connect(gain).connect(audioContext.destination);
+            osc.start();
+            osc.stop(audioContext.currentTime + duration);
+        }
+
+        function playNote(instrument, midiNote) {
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            const volume = document.querySelector(`#${instrument}Track .volume`).value;
+            const waveform = document.querySelector(`#${instrument}Track .waveform`).value;
+            
+            osc.type = waveform;
+            osc.frequency.setValueAtTime(440 * Math.pow(2, (midiNote - 69) / 12), audioContext.currentTime);
+            
+            gain.gain.value = volume;
+            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+            osc.connect(gain).connect(audioContext.destination);
+            osc.start();
+            osc.stop(audioContext.currentTime + 0.5);
+        }
+
+        // Sequencer
+        function togglePlay() {
+            if (!isPlaying) {
+                const bpm = document.getElementById('bpmControl').value;
+                const stepTime = (60 / bpm) / 4; // sixteenth notes
+                
+                currentStep = 0;
+                stepInterval = setInterval(() => {
+                    // Play drums
+                    if (sequence.kick[currentStep]) playDrum('kick');
+                    if (sequence.snare[currentStep]) playDrum('snare');
+                    if (sequence.hihat[currentStep]) playDrum('hihat');
+                    
+                    // Play melodic instruments
+                    if (sequence.bass[currentStep]) playNote('bass', bassNotes[currentStep]);
+                    if (sequence.lead[currentStep]) playNote('lead', leadNotes[currentStep]);
+
+                    updateGridDisplay();
+                    currentStep = (currentStep + 1) % 16;
+                }, stepTime * 1000);
+                
+                document.getElementById('playButton').textContent = 'Stop';
+            } else {
+                clearInterval(stepInterval);
+                document.getElementById('playButton').textContent = 'Play';
+            }
+            isPlaying = !isPlaying;
+        }
+
+        // Event listeners
+        document.getElementById('playButton').addEventListener('click', togglePlay);
+        
+        document.getElementById('bpmControl').addEventListener('input', (e) => {
+            document.getElementById('bpmDisplay').textContent = `${e.target.value} BPM`;
+            if (isPlaying) {
+                togglePlay(); // Stop
+                togglePlay(); // Restart at new tempo
+            }
+        });
+
+        document.getElementById('clearAll').addEventListener('click', () => {
+            Object.keys(sequence).forEach(instrument => {
+                sequence[instrument].fill(false);
+            });
+            updateGridDisplay();
+        });
+    </script>
+</body>
+</html>
