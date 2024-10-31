@@ -275,15 +275,117 @@
     <script>
         // Comprehensive 3-letter word list organized by categories
         const wordList = {
-            animals: ['ant', 'bat', 'cat', 'dog', 'eel', 'fox', 'hen', 'owl', 'pig', 'rat', 'yak'],
-            actions: ['add', 'beg', 'cut', 'dig', 'eat', 'get', 'hit', 'jog', 'run', 'sit', 'win', 'zip', 'zoo', 'zap'],
-            objects: ['bag', 'bed', 'cup', 'fan', 'hat', 'jar', 'key', 'map', 'pen', 'rug', 'toy', 'van'],
-            nature: ['air', 'bog', 'dew', 'fog', 'ice', 'log', 'mud', 'sky', 'sun', 'web', 'wet'],
-            feelings: ['bad', 'fun', 'joy', 'mad', 'sad', 'shy', 'sly'],
-            colors: ['red', 'tan'],
-            simple: ['all', 'and', 'any', 'are', 'big', 'can', 'did', 'end', 'for', 'had', 
-                    'has', 'him', 'his', 'how', 'new', 'not', 'now', 'old', 'one', 'out', 
-                    'she', 'the', 'too', 'use', 'was', 'way', 'who', 'yes', 'yet', 'you']
+            animals: [
+                'ant', 'ape', 'ass', 'bat', 'bee', 'bug', 'cat', 'cod', 'cow', 'cub', 
+                'doe', 'dog', 'eel', 'elk', 'emu', 'ewe', 'fin', 'fly', 'fox', 'pig',
+                'hen', 'hog', 'jay', 'kid', 'koi', 'owl', 'ott', 'pig', 'pup', 'ram',
+                'rat', 'ray', 'sow', 'yak', 'zoo'
+            ],
+            actions: [
+                'ace', 'add', 'aid', 'aim', 'are', 'ask', 'ate', 'ban', 'beg', 'bet', 
+                'bid', 'bit', 'bow', 'box', 'buy', 'can', 'cap', 'cry', 'cut', 'dab', 
+                'dam', 'dig', 'dim', 'dip', 'did', 'die', 'dot', 'dub', 'dug', 'dye',
+                'eat', 'end', 'eye', 'fan', 'fed', 'fix', 'fit', 'fly', 'fog', 'gap',
+                'gas', 'get', 'got', 'had', 'has', 'hem', 'hex', 'hid', 'hip', 'hit',
+                'hug', 'jab', 'jam', 'jar', 'jog', 'jot', 'key', 'kid', 'lap', 'lay',
+                'led', 'let', 'lie', 'lip', 'lit', 'lob', 'mix', 'mop', 'nab', 'nag',
+                'nap', 'nix', 'nod', 'oar', 'opt', 'pad', 'pat', 'pay', 'pet', 'pin',
+                'pop', 'pry', 'put', 'rap', 'rid', 'rip', 'rob', 'row', 'rub', 'run',
+                'saw', 'say', 'set', 'sew', 'sin', 'sip', 'sit', 'ski', 'sob', 'sum',
+                'tag', 'tan', 'tap', 'tax', 'tie', 'tip', 'try', 'use', 'vex', 'vow',
+                'wag', 'was', 'wed', 'win', 'woo', 'yap', 'yaw', 'zip', 'zap'
+            ],
+            objects: [
+                'ace', 'ads', 'aid', 'aim', 'air', 'ale', 'arc', 'arm', 'art', 'axe',
+                'bag', 'bar', 'bay', 'bed', 'bin', 'bit', 'box', 'bud', 'bug', 'bus',
+                'cab', 'can', 'cap', 'car', 'cot', 'cup', 'die', 'dim', 'dot', 'dye',
+                'ear', 'egg', 'end', 'eye', 'fan', 'fax', 'fig', 'fin', 'fix', 'flu',
+                'fog', 'fun', 'gap', 'gas', 'gel', 'gem', 'gun', 'gut', 'gym', 'ham',
+                'hat', 'hay', 'hem', 'hex', 'hip', 'hit', 'hub', 'hue', 'hut', 'ice',
+                'ink', 'inn', 'ion', 'jar', 'jet', 'job', 'jot', 'joy', 'jug', 'key',
+                'kit', 'lab', 'lap', 'law', 'leg', 'lid', 'lie', 'lip', 'log', 'lot',
+                'map', 'mat', 'mix', 'mob', 'mop', 'mud', 'mug', 'nap', 'net', 'nib',
+                'oil', 'orb', 'ore', 'pad', 'pan', 'pay', 'pen', 'pet', 'pie', 'pig',
+                'pin', 'pit', 'pod', 'pop', 'pot', 'pub', 'pun', 'rag', 'ram', 'rat',
+                'ray', 'rib', 'rim', 'rod', 'rug', 'rum', 'rut', 'rye', 'sac', 'saw',
+                'set', 'sin', 'sip', 'sir', 'sky', 'soy', 'spy', 'sum', 'sun', 'tab',
+                'tag', 'tap', 'tar', 'tax', 'tea', 'tie', 'tin', 'tip', 'toe', 'ton',
+                'top', 'toy', 'try', 'tub', 'tug', 'urn', 'use', 'van', 'vat', 'vet',
+                'wax', 'way', 'web', 'wig', 'win', 'wit', 'woe', 'yam', 'yap', 'yen',
+                'yew', 'zip', 'zoo'
+            ],
+            nature: [
+                'air', 'arc', 'ash', 'bay', 'bog', 'bud', 'dam', 'dew', 'fog', 'gem',
+                'ice', 'ion', 'ivy', 'jet', 'lag', 'law', 'log', 'map', 'mud', 'oak',
+                'ore', 'pod', 'rib', 'rim', 'rot', 'rye', 'sap', 'sea', 'sky', 'sod',
+                'sun', 'tea', 'tip', 'web', 'yew'
+            ],
+            feelings: [
+                'ado', 'bad', 'coy', 'dim', 'dip', 'ego', 'fit', 'fun', 'gay', 'gin',
+                'low', 'mad', 'rad', 'raw', 'sad', 'shy', 'sly', 'dry', 'wry', 'zen'
+            ],
+            colors: [
+                'red', 'tan', 'raw', 'gold', 'grey'
+            ],
+            foods: [
+                'ale', 'bun', 'dip', 'egg', 'fat', 'fig', 'gin', 'ham', 'jam', 'nut',
+                'oat', 'oil', 'pea', 'pie', 'rib', 'rye', 'soy', 'tea', 'yam'
+            ],
+            body: [
+                'arm', 'bum', 'ear', 'eye', 'fat', 'gum', 'gut', 'hip', 'jaw', 'leg',
+                'lid', 'lip', 'rib', 'toe', 'wry'
+            ],
+            time: [
+                'age', 'day', 'end', 'era', 'eve', 'now', 'old'
+            ],
+            people: [
+                'boy', 'cop', 'dad', 'don', 'gal', 'guy', 'kid', 'lad', 'man', 'mom',
+                'nun', 'pal', 'sir', 'son', 'tot'
+            ],
+            clothing: [
+                'bib', 'cap', 'hat', 'hem', 'tie', 'wig', 'zip'
+            ],
+            materials: [
+                'ash', 'fur', 'gel', 'gem', 'ice', 'ink', 'oil', 'ore', 'sap', 'tar',
+                'wax'
+            ],
+            measurement: [
+                'bit', 'gap', 'lot', 'sum', 'ton'
+            ],
+            science: [
+                'arc', 'ion', 'lab', 'law', 'mix', 'net', 'orb', 'ray', 'sum'
+            ],
+            vehicles: [
+                'bus', 'cab', 'car', 'jet', 'rig', 'van'
+            ],
+            buildings: [
+                'den', 'gym', 'hut', 'inn', 'lab', 'pub'
+            ],
+            games: [
+                'ace', 'bet', 'die', 'fun', 'hit', 'pin', 'win'
+            ],
+            music: [
+                'jam', 'rap', 'tap'
+            ],
+            money: [
+                'bet', 'bid', 'buy', 'due', 'fee', 'pay', 'tax', 'tip', 'won', 'yen'
+            ],
+            simple: [
+                'all', 'and', 'any', 'are', 'big', 'but', 'can', 'did', 'dry', 'due',
+                'end', 'far', 'few', 'for', 'get', 'had', 'has', 'her', 'him', 'his',
+                'how', 'lay', 'let', 'low', 'may', 'mid', 'new', 'nil', 'nix', 'not',
+                'now', 'odd', 'off', 'old', 'one', 'our', 'out', 'own', 'per', 'pro',
+                'put', 'raw', 'set', 'she', 'shy', 'sly', 'spy', 'the', 'too', 'top',
+                'try', 'two', 'use', 'via', 'was', 'way', 'who', 'why', 'won', 'yes',
+                'yet', 'you'
+            ],
+            quantity: [
+                'all', 'any', 'bit', 'few', 'lot', 'nil', 'one', 'two', 'ten', 'sum',
+                'ton'
+            ],
+            directions: [
+                'far', 'mid', 'off', 'out', 'top', 'up'
+            ]
         };
 
         // Flatten word list for easy lookup
