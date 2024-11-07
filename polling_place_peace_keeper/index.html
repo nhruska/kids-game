@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* Previous CSS remains exactly the same */
+    body {
+      margin: 0;
+      padding: 10px;
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+      touch-action: none;
+      overflow: hidden;
+    }
+
+    .game-container {
+      max-width: 500px;
+      margin: 0 auto;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      font-size: 18px;
+      padding: 8px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      aspect-ratio: 4/3;
+      background: #2196F3;
+      padding: 8px;
+      border-radius: 8px;
+    }
+
+    .hole {
+      background: #1a6535;
+      border-radius: 50%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .troublemaker {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      bottom: -100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      cursor: pointer;
+      transition: bottom 0.1s;
+      user-select: none;
+    }
+
+    .troublemaker.up {
+      bottom: 0;
+    }
+
+    .troublemaker.leaving {
+      animation: spinOut 0.5s ease-in;
+    }
+
+    @keyframes spinOut {
+      0% { transform: rotate(0deg) scale(1); }
+      100% { transform: rotate(720deg) scale(0); }
+    }
+
+    .message {
+      text-align: center;
+      font-size: 18px;
+      padding: 5px;
+      min-height: 28px;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      padding-bottom: 8px;
+    }
+
+    button {
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      background: #2196F3;
+      color: white;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .score-popup {
+      position: absolute;
+      color: #4CAF50;
+      font-weight: bold;
+      font-size: 20px;
+      pointer-events: none;
+      animation: floatUp 0.5s ease-out;
+    }
+
+    @keyframes floatUp {
+      0% { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(-50px); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <div class="stats">
+      <div>Peace: <span id="score">0</span></div>
+      <div>Time: <span id="timer">30</span>s</div>
+    </div>
+
+    <div class="grid" id="grid">
+      <div class="hole"><div class="troublemaker">🗣️</div></div>
+      <div class="hole"><div class="troublemaker">😤</div></div>
+      <div class="hole"><div class="troublemaker">🤬</div></div>
+      <div class="hole"><div class="troublemaker">😠</div></div>
+      <div class="hole"><div class="troublemaker">🗣️</div></div>
+      <div class="hole"><div class="troublemaker">😤</div></div>
+      <div class="hole"><div class="troublemaker">😠</div></div>
+      <div class="hole"><div class="troublemaker">🤬</div></div>
+      <div class="hole"><div class="troublemaker">🗣️</div></div>
+    </div>
+
+    <div class="message" id="message">Maintain the peace!</div>
+
+    <div class="controls">
+      <button onclick="startGame()" id="startBtn">Start Game</button>
+      <button onclick="showRules()">Rules</button>
+    </div>
+  </div>
+
+  <script>
+    let score = 0;
+    let timeLeft = 30;
+    let gameInterval;
+    let popupInterval;
+    let isPlaying = false;
+    const messages = [
+      "Please exit!", 
+      "No disruptions!", 
+      "Remain peaceful!", 
+      "Outside please!", 
+      "Keep it civil!"
+    ];
+
+    function startGame() {
+      if (isPlaying) return;
+      
+      // Reset game state
+      isPlaying = true;
+      score = 0;
+      timeLeft = 30;
+      document.getElementById('score').textContent = score;
+      document.getElementById('timer').textContent = timeLeft;
+      document.getElementById('message').textContent = "Maintain the peace!";
+      document.getElementById('startBtn').textContent = "In Progress...";
+      
+      // Clear any existing intervals
+      if (gameInterval) clearInterval(gameInterval);
+      if (popupInterval) clearInterval(popupInterval);
+
+      // Start the timer
+      gameInterval = setInterval(() => {
+        timeLeft--;
+        document.getElementById('timer').textContent = timeLeft;
+        if (timeLeft <= 0) endGame();
+      }, 1000);
+
+      // Start troublemaker spawning
+      popupInterval = setInterval(popupTroublemaker, 1000);
+    }
+
+    function popupTroublemaker() {
+      if (!isPlaying) return;
+      
+      const troublemakers = document.querySelectorAll('.troublemaker:not(.up)');
+      if (troublemakers.length === 0) return;
+      
+      const index = Math.floor(Math.random() * troublemakers.length);
+      troublemakers[index].classList.add('up');
+      
+      setTimeout(() => {
+        if (troublemakers[index].classList.contains('up')) {
+          troublemakers[index].classList.remove('up');
+        }
+      }, 1500);
+    }
+
+    function showRules() {
+      document.getElementById('message').textContent = 
+        "Tap troublemakers to peacefully direct them away! Keep the polling place calm.";
+    }
+
+    function endGame() {
+      isPlaying = false;
+      clearInterval(gameInterval);
+      clearInterval(popupInterval);
+      document.getElementById('startBtn').textContent = "Start Game";
+      document.querySelectorAll('.troublemaker').forEach(t => t.classList.remove('up'));
+      document.getElementById('message').textContent = 
+        `Game Over! You maintained the peace ${score} times!`;
+    }
+
+    function createScorePopup(x, y) {
+      const popup = document.createElement('div');
+      popup.className = 'score-popup';
+      popup.textContent = messages[Math.floor(Math.random() * messages.length)];
+      popup.style.left = `${x}px`;
+      popup.style.top = `${y}px`;
+      document.body.appendChild(popup);
+      
+      setTimeout(() => popup.remove(), 500);
+    }
+
+    // Add click handlers to troublemakers
+    document.querySelectorAll('.troublemaker').forEach(troublemaker => {
+      troublemaker.addEventListener('click', function(e) {
+        if (!isPlaying || !this.classList.contains('up')) return;
+        
+        score++;
+        document.getElementById('score').textContent = score;
+        
+        this.classList.add('leaving');
+        this.classList.remove('up');
+        
+        createScorePopup(e.pageX, e.pageY);
+        
+        setTimeout(() => {
+          this.classList.remove('leaving');
+        }, 500);
+      });
+    });
+  </script>
+</body>
+</html>

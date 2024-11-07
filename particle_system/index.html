@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #000;
+    }
+    canvas {
+      width: 100vw;
+      height: 100vh;
+      touch-action: none;
+    }
+    .controls {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      background: rgba(0,0,0,0.7);
+      padding: 8px;
+      border-radius: 20px;
+      backdrop-filter: blur(5px);
+      max-width: 95vw;
+    }
+    button {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 15px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s;
+      text-shadow: 0 0 5px rgba(255,255,255,0.5);
+    }
+    button:active {
+      transform: scale(0.95);
+    }
+    button.active {
+      background: rgba(100,200,255,0.3);
+      border-color: rgba(100,200,255,0.5);
+      box-shadow: 0 0 10px rgba(100,200,255,0.3);
+    }
+    .help {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: white;
+      background: rgba(0,0,0,0.5);
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-family: Arial, sans-serif;
+      pointer-events: none;
+      opacity: 1;
+      transition: opacity 0.5s;
+    }
+  </style>
+</head>
+<body>
+  <div class="help" id="help">Drag to control! Double tap for effects!</div>
+  <canvas id="canvas"></canvas>
+  <div class="controls" id="controls">
+    <button onclick="toggleEffect('vortex')">Vortex</button>
+    <button onclick="toggleEffect('galaxy')">Galaxy</button>
+    <button onclick="toggleEffect('fireworks')">Fireworks</button>
+    <button onclick="toggleEffect('dna')">DNA</button>
+    <button onclick="toggleEffect('matrix')">Matrix</button>
+    <button onclick="toggleEffect('tornado')">Tornado</button>
+    <button onclick="toggleEffect('blackhole')">Black Hole</button>
+    <button onclick="toggleEffect('snow')">Snow</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const help = document.getElementById('help');
+
+    // Hide help after 3 seconds
+    setTimeout(() => {
+      help.style.opacity = '0';
+    }, 3000);
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    class Particle {
+      constructor() {
+        this.reset();
+      }
+
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.z = Math.random() * 1000;
+        this.size = Math.random() * 5 + 1;
+        this.speed = Math.random() * 2 + 0.5;
+        this.vx = (Math.random() - 0.5) * 2;
+        this.vy = (Math.random() - 0.5) * 2;
+        this.vz = -this.speed;
+        this.hue = Math.random() * 60 + 200;
+        this.trail = [];
+        this.maxTrail = 5;
+        this.life = 1;
+        this.decay = 0.003;
+      }
+
+      update(effect) {
+        this.life -= this.decay;
+        if (this.life <= 0) this.reset();
+
+        switch(effect) {
+          case 'vortex':
+            const angle = Math.atan2(this.y - canvas.height/2, this.x - canvas.width/2);
+            this.vx += Math.cos(angle) * 0.2;
+            this.vy += Math.sin(angle) * 0.2;
+            break;
+          case 'galaxy':
+            const dist = Math.hypot(this.x - canvas.width/2, this.y - canvas.height/2);
+            const angle2 = Math.atan2(this.y - canvas.height/2, this.x - canvas.width/2);
+            this.vx = Math.cos(angle2) * (dist * 0.01);
+            this.vy = Math.sin(angle2) * (dist * 0.01);
+            this.hue = (angle2 * 180/Math.PI + 360) % 360;
+            break;
+          case 'fireworks':
+            this.vy += 0.1; // gravity
+            this.decay = 0.02;
+            if (Math.random() < 0.01) {
+              this.vx = (Math.random() - 0.5) * 10;
+              this.vy = -Math.random() * 15;
+            }
+            break;
+          case 'dna':
+            const t = time * 0.01;
+            this.x = canvas.width/2 + Math.sin(this.z * 0.1 + t) * 100;
+            this.y = (this.z + time) % canvas.height;
+            this.hue = (this.z + time) % 360;
+            break;
+          case 'matrix':
+            this.vy = this.speed * 3;
+            this.vx = 0;
+            this.hue = 120;
+            if (this.y > canvas.height) {
+              this.y = 0;
+              this.x = Math.random() * canvas.width;
+            }
+            break;
+          case 'tornado':
+            const heightFactor = 1 - (this.y / canvas.height);
+            const radius = heightFactor * 100;
+            const angle3 = time * 0.05;
+            this.vx += (canvas.width/2 + Math.cos(angle3) * radius - this.x) * 0.1;
+            this.vy += (canvas.height/2 + Math.sin(angle3) * radius - this.y) * 0.1;
+            break;
+          case 'blackhole':
+            const dx = canvas.width/2 - this.x;
+            const dy = canvas.height/2 - this.y;
+            const dist2 = Math.hypot(dx, dy);
+            const force = dist2 * 0.0001;
+            this.vx += dx * force;
+            this.vy += dy * force;
+            this.decay = 0.001;
+            break;
+          case 'snow':
+            this.vy = this.speed;
+            this.vx = Math.sin(time * 0.01 + this.z) * 0.5;
+            this.hue = 200;
+            if (this.y > canvas.height) {
+              this.y = 0;
+              this.x = Math.random() * canvas.width;
+            }
+            break;
+        }
+
+        this.x += this.vx;
+        this.y += this.vy;
+        this.z += this.vz;
+
+        this.trail.unshift({x: this.x, y: this.y});
+        if (this.trail.length > this.maxTrail) {
+          this.trail.pop();
+        }
+
+        if (this.x < 0) this.x = canvas.width;
+        if (this.x > canvas.width) this.x = 0;
+        if (this.y < 0) this.y = canvas.height;
+        if (this.y > canvas.height) this.y = 0;
+
+        this.vx *= 0.99;
+        this.vy *= 0.99;
+      }
+
+      draw() {
+        const scale = 1000 / (1000 + this.z);
+        const x = this.x;
+        const y = this.y;
+        const size = this.size * scale * this.life;
+
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        for (let i = 0; i < this.trail.length; i++) {
+          const point = this.trail[i];
+          ctx.lineTo(point.x, point.y);
+        }
+        ctx.strokeStyle = `hsla(${this.hue}, 100%, 50%, ${scale * 0.5 * this.life})`;
+        ctx.lineWidth = size * 0.5;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${this.hue}, 100%, 50%, ${scale * this.life})`;
+        ctx.fill();
+      }
+    }
+
+    const particles = Array(300).fill().map(() => new Particle());
+    let currentEffect = '';
+    let time = 0;
+    let isPointerDown = false;
+    let pointerX = 0;
+    let pointerY = 0;
+    let lastTap = 0;
+
+    function toggleEffect(effect) {
+      // Update button states
+      document.querySelectorAll('button').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.textContent.toLowerCase() === effect) {
+          btn.classList.add('active');
+        }
+      });
+      
+      currentEffect = currentEffect === effect ? '' : effect;
+      
+      // Reset particles for certain effects
+      if (['galaxy', 'dna', 'matrix'].includes(effect)) {
+        particles.forEach(p => p.reset());
+      }
+    }
+
+    function handlePointer(e) {
+      const currentTime = Date.now();
+      if (currentTime - lastTap < 300) {
+        const effects = ['vortex', 'galaxy', 'fireworks', 'dna', 'matrix', 'tornado', 'blackhole', 'snow'];
+        toggleEffect(effects[Math.floor(Math.random() * effects.length)]);
+      }
+      lastTap = currentTime;
+
+      pointerX = e.clientX || e.touches[0].clientX;
+      pointerY = e.clientY || e.touches[0].clientY;
+    }
+
+    canvas.addEventListener('mousedown', (e) => {
+      isPointerDown = true;
+      handlePointer(e);
+    });
+    canvas.addEventListener('mousemove', (e) => {
+      if (isPointerDown) handlePointer(e);
+    });
+    canvas.addEventListener('mouseup', () => {
+      isPointerDown = false;
+    });
+    canvas.addEventListener('touchstart', handlePointer);
+    canvas.addEventListener('touchmove', handlePointer);
+
+    function animate() {
+      ctx.fillStyle = 'rgba(0,0,0,0.1)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      time++;
+
+      particles.forEach(particle => {
+        if (isPointerDown) {
+          const dx = particle.x - pointerX;
+          const dy = particle.y - pointerY;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 200) {
+            particle.vx += dx * 0.01;
+            particle.vy += dy * 0.01;
+          }
+        }
+        
+        particle.update(currentEffect);
+        particle.draw();
+      });
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+</body>
+</html>

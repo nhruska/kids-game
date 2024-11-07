@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Simple 2048</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 10px;
+      background: #f0f0f0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      touch-action: none;
+      overflow: hidden;
+      height: 100vh;
+    }
+
+    .container {
+      max-width: 500px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .grid {
+      aspect-ratio: 1;
+      background: #bbada0;
+      padding: 10px;
+      border-radius: 5px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+      gap: 10px;
+      touch-action: none;
+    }
+
+    .cell {
+      background: rgba(238, 228, 218, 0.35);
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: bold;
+      color: white;
+      transform-origin: center;
+    }
+
+    .cell[data-value="2"] { background: #3498db; }
+    .cell[data-value="4"] { background: #2980b9; }
+    .cell[data-value="8"] { background: #e74c3c; }
+    .cell[data-value="16"] { background: #c0392b; }
+    .cell[data-value="32"] { background: #2ecc71; }
+    .cell[data-value="64"] { background: #27ae60; }
+    .cell[data-value="128"] { background: #f1c40f; font-size: 20px; }
+    .cell[data-value="256"] { background: #f39c12; font-size: 20px; }
+    .cell[data-value="512"] { background: #e67e22; font-size: 20px; }
+    .cell[data-value="1024"] { background: #d35400; font-size: 18px; }
+    .cell[data-value="2048"] { background: #8e44ad; font-size: 18px; }
+
+    button {
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      background: #2196F3;
+      color: white;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="grid" id="grid"></div>
+    <button onclick="newGame()">New Game</button>
+  </div>
+
+  <script>
+    let grid = [];
+    let startX, startY;
+
+    function createGrid() {
+      const gridElement = document.getElementById('grid');
+      gridElement.innerHTML = '';
+      grid = Array(4).fill().map(() => Array(4).fill(0));
+
+      for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          gridElement.appendChild(cell);
+        }
+      }
+
+      addNumber();
+      addNumber();
+      updateDisplay();
+    }
+
+    function updateDisplay() {
+      const cells = document.querySelectorAll('.cell');
+      grid.forEach((row, i) => {
+        row.forEach((val, j) => {
+          const cell = cells[i * 4 + j];
+          cell.textContent = val || '';
+          cell.dataset.value = val || '';
+          
+          // Simple animation for new or merged tiles
+          if (val) {
+            cell.style.animation = 'none';
+            cell.offsetHeight; // Trigger reflow
+            cell.style.animation = 'pop 0.15s ease-in-out';
+          }
+        });
+      });
+    }
+
+    function addNumber() {
+      const emptyCells = [];
+      grid.forEach((row, i) => {
+        row.forEach((cell, j) => {
+          if (!cell) emptyCells.push([i, j]);
+        });
+      });
+
+      if (emptyCells.length) {
+        const [i, j] = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+        grid[i][j] = Math.random() < 0.9 ? 2 : 4;
+      }
+    }
+
+    function slide(row) {
+      const filtered = row.filter(x => x);
+      const missing = 4 - filtered.length;
+      const zeros = Array(missing).fill(0);
+      return zeros.concat(filtered);
+    }
+
+    function combine(row) {
+      for (let i = 3; i >= 1; i--) {
+        if (row[i] === row[i-1] && row[i] !== 0) {
+          row[i] *= 2;
+          row[i-1] = 0;
+        }
+      }
+      return row;
+    }
+
+    function moveRight() {
+      let moved = false;
+      const oldGrid = grid.map(row => [...row]);
+
+      for (let i = 0; i < 4; i++) {
+        let row = grid[i];
+        row = slide(row);
+        row = combine(row);
+        row = slide(row);
+        grid[i] = row;
+        
+        if (!arraysEqual(oldGrid[i], grid[i])) moved = true;
+      }
+
+      return moved;
+    }
+
+    function moveLeft() {
+      let moved = false;
+      const oldGrid = grid.map(row => [...row]);
+
+      for (let i = 0; i < 4; i++) {
+        let row = grid[i].slice().reverse();
+        row = slide(row);
+        row = combine(row);
+        row = slide(row);
+        grid[i] = row.reverse();
+        
+        if (!arraysEqual(oldGrid[i], grid[i])) moved = true;
+      }
+
+      return moved;
+    }
+
+    function moveUp() {
+      let moved = false;
+      const oldGrid = grid.map(row => [...row]);
+
+      for (let j = 0; j < 4; j++) {
+        let col = [grid[0][j], grid[1][j], grid[2][j], grid[3][j]].reverse();
+        col = slide(col);
+        col = combine(col);
+        col = slide(col);
+        col.reverse();
+        
+        for (let i = 0; i < 4; i++) {
+          if (grid[i][j] !== col[i]) moved = true;
+          grid[i][j] = col[i];
+        }
+      }
+
+      return moved;
+    }
+
+    function moveDown() {
+      let moved = false;
+      const oldGrid = grid.map(row => [...row]);
+
+      for (let j = 0; j < 4; j++) {
+        let col = [grid[0][j], grid[1][j], grid[2][j], grid[3][j]];
+        col = slide(col);
+        col = combine(col);
+        col = slide(col);
+        
+        for (let i = 0; i < 4; i++) {
+          if (grid[i][j] !== col[i]) moved = true;
+          grid[i][j] = col[i];
+        }
+      }
+
+      return moved;
+    }
+
+    function arraysEqual(a1, a2) {
+      return JSON.stringify(a1) === JSON.stringify(a2);
+    }
+
+    function handleMove(direction) {
+      let moved = false;
+      switch(direction) {
+        case 'right': moved = moveRight(); break;
+        case 'left': moved = moveLeft(); break;
+        case 'up': moved = moveUp(); break;
+        case 'down': moved = moveDown(); break;
+      }
+
+      if (moved) {
+        addNumber();
+        updateDisplay();
+      }
+    }
+
+    function handleTouchStart(e) {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    }
+
+    function handleTouchMove(e) {
+      if (!startX || !startY) return;
+
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
+      const absDx = Math.abs(dx);
+      const absDy = Math.abs(dy);
+
+      if (Math.max(absDx, absDy) > 30) {
+        if (absDx > absDy) {
+          handleMove(dx > 0 ? 'right' : 'left');
+        } else {
+          handleMove(dy > 0 ? 'down' : 'up');
+        }
+        startX = null;
+        startY = null;
+      }
+    }
+
+    function handleKeydown(e) {
+      switch(e.key) {
+        case 'ArrowRight': handleMove('right'); break;
+        case 'ArrowLeft': handleMove('left'); break;
+        case 'ArrowUp': handleMove('up'); break;
+        case 'ArrowDown': handleMove('down'); break;
+      }
+    }
+
+    function newGame() {
+      createGrid();
+    }
+
+    // Event listeners
+    document.addEventListener('keydown', handleKeydown);
+    document.addEventListener('touchstart', handleTouchStart, {passive: true});
+    document.addEventListener('touchmove', handleTouchMove, {passive: true});
+
+    // Start game
+    createGrid();
+  </script>
+</body>
+</html>

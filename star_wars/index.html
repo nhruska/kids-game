@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Star Wars Intro</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      background: #000;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      font-family: "Helvetica", sans-serif;
+      perspective: 350px;
+    }
+
+    .stars {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1;
+    }
+
+    .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: white;
+      border-radius: 50%;
+    }
+
+    .title {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #4bd5ee;
+      font-size: 32px;
+      opacity: 0;
+      z-index: 2;
+    }
+
+    .crawl-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      overflow: hidden;
+      transform-origin: 50% 100%;
+      transform: perspective(350px) rotateX(25deg);
+    }
+
+    .crawl {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      color: #ffd54e;
+      font-size: 36px;
+      text-align: center;
+      transform: translateY(0);
+    }
+
+    .crawl h1 {
+      font-size: 48px;
+      margin: 0 0 100px;
+    }
+
+    .crawl p {
+      line-height: 1.5;
+      margin: 20px 10px;
+    }
+
+    .controls {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 3;
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background: #ffd54e;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 600px) {
+      .crawl {
+        font-size: 24px;
+      }
+      .crawl h1 {
+        font-size: 32px;
+      }
+      .title {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="stars"></div>
+  <div class="title">STAR WARS</div>
+  <div class="crawl-container">
+    <div class="crawl">
+      <h1>Episode IV<br>A NEW HOPE</h1>
+      <p>It is a period of civil war. Rebel spaceships, striking from a hidden base, have won their first victory against the evil Galactic Empire.</p>
+      <p>During the battle, Rebel spies managed to steal secret plans to the Empire's ultimate weapon, the DEATH STAR, an armored space station with enough power to destroy an entire planet.</p>
+      <p>Pursued by the Empire's sinister agents, Princess Leia races home aboard her starship, custodian of the stolen plans that can save her people and restore freedom to the galaxy....</p>
+    </div>
+  </div>
+  <div class="controls">
+    <button onclick="startIntro()">Play Intro</button>
+    <button onclick="resetIntro()">Reset</button>
+  </div>
+
+  <script>
+    // Create starfield
+    const starsContainer = document.querySelector('.stars');
+    const starCount = 500;
+    
+    for (let i = 0; i < starCount; i++) {
+      const star = document.createElement('div');
+      star.className = 'star';
+      star.style.left = `${Math.random() * 100}%`;
+      star.style.top = `${Math.random() * 100}%`;
+      star.style.opacity = Math.random();
+      starsContainer.appendChild(star);
+    }
+
+    // Audio setup
+    const audio = new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQxAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAASAAAeMwAUFBQUFCIiIiIiIjAwMDAwPz8/Pz8/TU1NTU1bW1tbW1toaGhoaHd3d3d3d4SEhISEkpKSkpKSoKCgoKCvr6+vr6+9vb29vcLCwsLCz8/Pz8/P3d3d3d3d6urq6urq+Pj4+Pj4////////AAAAAExhdmM1OC4xMwAAAAAAAAAAAAAAACQCgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/++DEAAAJdAEe7AAAITMBr94AACFAMAAAAALQ5ZdyxAACAIAiD4Pg+D7/4PwQBEABBB/B8Hwf/EHwfB8HwfB8HwfB8HwfB8HwfB8HwfB8HwfB8HwQEUAAAAAALAAAA//h+D4Pg+D//4Pg+D4Pg+P//EAQBEABBEHwfB8H//B8HwfB8H/wQBAEQAEAAAAASbZYjgAAAAAgCIIg+D4Pg+D4Pg+D4Pg+D4Pg+D4Pg+D4Pg+D4Pg+D4Pg+D4Pg+D4Pg+D4Pg+D4Pg+D4Pg+D4Pg+D4Pg+D4Pg+D4Pg+D4Pg+D4Pg+D4PhAAACAAAAAAAfB8HwfB8HwfB8EAEQAEAQA//+D4Pg+D//EHwfBAEAAAAAAAAAAAAAAAAAAAAQ==');
+    audio.volume = 0.5;
+
+    // Animation control
+    let introStarted = false;
+
+    function startIntro() {
+      if (introStarted) return;
+      introStarted = true;
+
+      // Play audio
+      audio.currentTime = 0;
+      audio.play();
+
+      // Animate logo
+      const title = document.querySelector('.title');
+      title.style.transition = 'all 6s ease-out';
+      title.style.opacity = '1';
+      title.style.transform = 'translate(-50%, -50%) scale(0.1)';
+      
+      setTimeout(() => {
+        title.style.opacity = '0';
+      }, 5000);
+
+      // Start crawl
+      const crawl = document.querySelector('.crawl');
+      crawl.style.transition = 'transform 60s linear';
+      crawl.style.transform = 'translateY(-100%)';
+    }
+
+    function resetIntro() {
+      introStarted = false;
+      audio.pause();
+      
+      const title = document.querySelector('.title');
+      title.style.transition = 'none';
+      title.style.opacity = '0';
+      title.style.transform = 'translate(-50%, -50%)';
+      
+      const crawl = document.querySelector('.crawl');
+      crawl.style.transition = 'none';
+      crawl.style.transform = 'translateY(0)';
+
+      // Force reflow
+      void crawl.offsetWidth;
+    }
+
+    // Star animation
+    function animateStars() {
+      const stars = document.querySelectorAll('.star');
+      stars.forEach(star => {
+        const speed = Math.random() * 0.3 + 0.1;
+        star.style.animation = `twinkle ${speed}s infinite alternate`;
+      });
+    }
+
+    animateStars();
+  </script>
+</body>
+</html>
