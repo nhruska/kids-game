@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rock Paper Scissors</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: white;
+            font-family: system-ui, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .game {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        h1 {
+            margin-top: 0;
+            font-size: 2rem;
+        }
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        button {
+            background: #3b82f6;
+            border: none;
+            color: white;
+            font-size: 1.1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        #reset {
+            margin-top: 1rem;
+            background: #ef4444;
+        }
+        #reset:hover {
+            background: #dc2626;
+        }
+    </style>
+</head>
+<body>
+    <div class="game">
+        <h1>Rock Paper Scissors</h1>
+        <p id="result">Choose your move!</p>
+        <div class="buttons">
+            <button onclick="play('rock')">✊ Rock</button>
+            <button onclick="play('paper')">📄 Paper</button>
+            <button onclick="play('scissors')">✂️ Scissors</button>
+        </div>
+        <p>Player: <span id="player-score">0</span> - CPU: <span id="cpu-score">0</span></p>
+        <button id="reset" onclick="resetGame()">Reset</button>
+    </div>
+    <script>
+        let playerScore = 0;
+        let cpuScore = 0;
+        const choices = ['rock','paper','scissors'];
+        function play(player){
+            const cpu = choices[Math.floor(Math.random()*3)];
+            let outcome = '';
+            if(player === cpu){
+                outcome = `Tie! You both chose ${cpu}.`;
+            }else if(
+                (player==='rock' && cpu==='scissors') ||
+                (player==='paper' && cpu==='rock') ||
+                (player==='scissors' && cpu==='paper')
+            ){
+                outcome = `You win! ${player} beats ${cpu}.`;
+                playerScore++;
+            }else{
+                outcome = `You lose! ${cpu} beats ${player}.`;
+                cpuScore++;
+            }
+            document.getElementById('result').textContent = outcome;
+            document.getElementById('player-score').textContent = playerScore;
+            document.getElementById('cpu-score').textContent = cpuScore;
+        }
+        function resetGame(){
+            playerScore = 0;
+            cpuScore = 0;
+            document.getElementById('result').textContent = 'Choose your move!';
+            document.getElementById('player-score').textContent = playerScore;
+            document.getElementById('cpu-score').textContent = cpuScore;
+        }
+    </script>
+</body>
+</html>
